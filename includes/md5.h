@@ -1,26 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_ssl.h                                           :+:      :+:    :+:   */
+/*   md5.h                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/03 13:25:14 by plouvel          ###   ########.fr       */
+/*   Created: 2024/07/03 13:04:17 by plouvel           #+#    #+#             */
+/*   Updated: 2024/07/03 14:14:10 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FT_SSL_H
-#define FT_SSL_H
+#ifndef MD5_H
+#define MD5_H
 
-#include <stdint.h>
+#include <stddef.h>
 
-#include "ft_args_parser.h"
+#define F(X, Y, Z) (((X) & (Y)) | (~(X) & (Z)))
 
-typedef struct s_command {
-    const char           *name;
-    t_args_parser_config *opts_parsing_config;
-    const char *(*hash_fn)(const void *, size_t);
-} t_command;
+const char *md5_hash(const void *buf, size_t buf_size);
 
 #endif

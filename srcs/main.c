@@ -6,26 +6,28 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/02 15:06:12 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/03 13:05:46 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "ft_ssl.h"
 #include "libft.h"
+#include "md5.h"
 
 #define NSIZE(x) (sizeof(x) / sizeof(x[0]))
 
 extern const char *program_invocation_short_name;
 
-static const t_command g_available_cmds[] = {{.name = "md5", .opts_parsing_config = NULL, .hash_fn = NULL},
+static const t_command g_available_cmds[] = {{.name = "md5", .opts_parsing_config = NULL, .hash_fn = md5_hash},
                                              {.name = "sha256", .opts_parsing_config = NULL, .hash_fn = NULL}};
 
-static void
-print_usage() {
-    printf("usage: %s [COMMAND] [COMMAND OPTS] \n\n", program_invocation_short_name);
+static int
+print_usage(int ret_code) {
+    printf("usage: %s [COMMAND] [COMMAND OPTS] [FILE/STRING] \n\n", program_invocation_short_name);
     printf("Available commands :\n");
     for (size_t i = 0; i < NSIZE(g_available_cmds); i++) {
         printf("%s\n", g_available_cmds[i].name);
@@ -35,16 +37,17 @@ print_usage() {
         printf("Available options :\n");
         ft_args_parser_print_docs(g_available_cmds[i].opts_parsing_config);
     }
+    return (ret_code);
 }
 
 int
 main(int argc, char **argv) {
-    const char      *cmd_str = NULL;
-    const t_command *cmd     = NULL;
+    const char      *cmd_str   = NULL;
+    const t_command *cmd       = NULL;
+    const char      *hash_rslt = NULL;
 
     if (argc < 2) {
-        print_usage();
-        return (1);
+        return (print_usage(1));
     }
     cmd_str = argv[1];
     for (size_t i = 0; i < NSIZE(g_available_cmds); i++) {
@@ -54,9 +57,10 @@ main(int argc, char **argv) {
         }
     }
     if (cmd == NULL) {
-        ft_error(0, 0, "'%s': no such command\n", cmd_str);
-        print_usage();
+        ft_error(0, 0, "'%s': no such command", cmd_str);
         return (1);
     }
+    assert(cmd->hash_fn != NULL);
+    puts(hash_rslt);
     return (0);
 }
