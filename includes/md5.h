@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 15:15:43 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/04 15:33:03 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/04 16:03:00 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,12 @@
  * @brief If X, then Y, else Z.
  */
 #define F(X, Y, Z) (((X) & (Y)) | ((~X) & (Z)))
-
 #define G(X, Y, Z) (((X) & (Z)) | ((Y) & (~Z)))
+/**
+ * @brief  Bit-wise parity operator.
+ *
+ */
+#define H(X, Y, Z) ((X) ^ (Y) ^ (Z))
+#define I(X, Y, Z) ((Y) ^ ((X) | (~Z)))
 
 #endif
