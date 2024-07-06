@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/03 13:05:46 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/06 14:39:44 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,15 @@
 #include <string.h>
 
 #include "ft_ssl.h"
+#include "includes/md5.h"
 #include "libft.h"
-#include "md5.h"
 
 #define NSIZE(x) (sizeof(x) / sizeof(x[0]))
 
 extern const char *program_invocation_short_name;
 
-static const t_command g_available_cmds[] = {{.name = "md5", .opts_parsing_config = NULL, .hash_fn = md5_hash},
-                                             {.name = "sha256", .opts_parsing_config = NULL, .hash_fn = NULL}};
+static const t_command g_available_cmds[] = {{.name = "md5", .opts_parsing_config = NULL, .hash_fd = md5_fd, .hash_str = md5_str},
+                                             {.name = "sha256", .opts_parsing_config = NULL, .hash_fd = NULL, .hash_str = NULL}};
 
 static int
 print_usage(int ret_code) {
@@ -40,11 +40,35 @@ print_usage(int ret_code) {
     return (ret_code);
 }
 
+static void
+print_digest(const uint8_t *digest, size_t ldigest) {
+    size_t i = 0;
+
+    while (i < ldigest) {
+        ft_putnbr_base_fd(digest[i], "0123456789abcdef", STDOUT);
+        i++;
+    }
+}
+
+static int
+digest_msg(const t_command *cmd) {
+    void  *digest  = NULL;
+    size_t ldigest = 0;
+
+    assert(cmd->hash_fd != NULL && "FD hash not implemented");
+    assert(cmd->hash_str != NULL && "STR hash not implemented");
+
+    cmd->hash_str("Hello World!", &digest, &ldigest);
+
+    print_digest(digest, ldigest);
+
+    return (0);
+}
+
 int
 main(int argc, char **argv) {
-    const char      *cmd_str   = NULL;
-    const t_command *cmd       = NULL;
-    const char      *hash_rslt = NULL;
+    const char      *cmd_str = NULL;
+    const t_command *cmd     = NULL;
 
     if (argc < 2) {
         return (print_usage(1));
@@ -60,7 +84,5 @@ main(int argc, char **argv) {
         ft_error(0, 0, "'%s': no such command", cmd_str);
         return (1);
     }
-    assert(cmd->hash_fn != NULL);
-    puts(hash_rslt);
-    return (0);
+    return (digest_msg(cmd));
 }

@@ -6,11 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-<<<<<<< HEAD
-#    Updated: 2024/07/03 13:06:02 by plouvel          ###   ########.fr        #
-=======
-#    Updated: 2024/07/04 15:25:06 by plouvel          ###   ########.fr        #
->>>>>>> e7c1b132145dcf98a5eca497fe704b7ee188ec78
+#    Updated: 2024/07/06 12:46:47 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,19 +24,15 @@ TEST_RESULTS_PATH=$(BUILD_PATH)/test_results
 
 UNITY_PATH=unity/src
 
-PROJECT_INCLUDE=$(addprefix -I, $(INCLUDES_PATH) $(LIBFT_PATH)/includes)
+PROJECT_INCLUDE=$(addprefix -I, $(INCLUDES_PATH) $(LIBFT_PATH)/includes ./)
 UNITY_INCLUDE=$(addprefix -I, $(UNITY_PATH))
 ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 
 # Sources
 
 SRCS=main.c \
-<<<<<<< HEAD
-     md5.c
-=======
 	 md5.c \
      io.c
->>>>>>> e7c1b132145dcf98a5eca497fe704b7ee188ec78
 
 TESTS=test_io.c \
 	  test_md5.c
