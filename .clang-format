@@ -6,7 +6,7 @@ AlwaysBreakAfterDefinitionReturnType: All
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
-ColumnLimit: 140
+ColumnLimit: 80
 AlignConsecutiveDeclarations: true
 AlignConsecutiveAssignments: true
 PPIndentWidth: 1

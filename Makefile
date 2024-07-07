@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/07/06 12:46:47 by plouvel          ###   ########.fr        #
+#    Updated: 2024/07/08 00:27:18 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,10 +32,8 @@ ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 
 SRCS=main.c \
 	 md5.c \
-     io.c
 
-TESTS=test_io.c \
-	  test_md5.c
+TESTS=test_md5.c
 
 SRCS_TESTS:=$(addprefix $(TESTS_PATH)/, $(TESTS))
 
