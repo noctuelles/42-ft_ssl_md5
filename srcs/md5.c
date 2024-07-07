@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 17:14:18 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/06 14:44:16 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/07 17:58:48 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,8 @@ static const uint8_t g_pads[64] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0
                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static uint32_t
 F(uint32_t b, uint32_t c, uint32_t d, size_t i) {
@@ -97,7 +99,7 @@ init_md5_ctx(void) {
 void
 md5_step(t_md5_ctx *md5_ctx) {
     uint32_t        a = 0, b = 0, c = 0, d = 0;
-    const uint32_t *blk = md5_ctx->buff;
+    const uint32_t *input = (const uint32_t *)md5_ctx->buff;
 
     a = md5_ctx->state[0];
     b = md5_ctx->state[1];
@@ -106,7 +108,7 @@ md5_step(t_md5_ctx *md5_ctx) {
 
     for (size_t i = 0; i < 64; i++) {
         a = d;
-        b = b + L_ROT_32(F(b, c, d, i) + g_sines[i] + blk[G(i)], g_shifts[i]);
+        b = b + L_ROT_32(F(b, c, d, i) + g_sines[i] + input[G(i)], g_shifts[i]);
         c = b;
         d = c;
     }
@@ -119,62 +121,73 @@ md5_step(t_md5_ctx *md5_ctx) {
 
 void
 md5_transform(t_md5_ctx *md5_ctx, const uint8_t *buff, size_t blen) {
-    size_t boff = 0;
+    while (blen) {
+        const size_t buntil_full = MD5_BUFF_SIZE_BYTE - md5_ctx->boff;
+        const size_t consumed    = MIN(buntil_full, blen);
 
-    (void)g_pads;
-    boff = md5_ctx->boff;
-    while (boff < blen) {
-        md5_ctx->buff[boff / 4] |= buff[boff] << ((boff % 4) * 8);
+        memcpy(&md5_ctx->buff[md5_ctx->boff], buff, consumed);
 
-        if (boff % 64 == 0 && boff != 0) {
-            /* We've a 512 bit-block, process it ! */
+        blen -= consumed, buff += consumed, md5_ctx->boff += consumed, md5_ctx->mlen += consumed;
+
+        if (md5_ctx->boff == MD5_BUFF_SIZE_BYTE) {
             md5_step(md5_ctx);
-            boff = 0;
+            md5_ctx->boff = 0;
         }
-        boff++;
     }
-    md5_ctx->boff = boff;
-    md5_ctx->mlen += blen;
 }
 
 void
 md5_finalize(t_md5_ctx *md5_ctx) {
-    (void)md5_ctx;
+    const uint64_t org_len = md5_ctx->mlen;
+
+    if (md5_ctx->boff < 56) {
+        md5_transform(md5_ctx, g_pads, 56 - md5_ctx->boff);
+    } else {
+        md5_transform(md5_ctx, g_pads, 120 - md5_ctx->boff);
+    }
 }
 
-static void *
-md5_digest(const t_md5_ctx *md5_ctx) {
-    void *digest = NULL;
+static int
+md5_digest(const t_md5_ctx *md5_ctx, void **digest, size_t *ldigest) {
+    void  *rslt = NULL;
+    size_t size = sizeof(md5_ctx->state);
 
-    if ((digest = malloc(sizeof(md5_ctx->state))) == NULL) {
-        return (NULL);
+    if ((rslt = malloc(size)) == NULL) {
+        return (-1);
     }
-    memcpy(digest, md5_ctx->state, sizeof(md5_ctx->state));
-
-    return (digest);
+    memcpy(rslt, md5_ctx->state, size);
+    *digest  = rslt;
+    *ldigest = size;
+    return (0);
 }
 
 int
 md5_str(const char *str, void **digest, size_t *ldigest) {
-    t_md5_ctx ctx  = init_md5_ctx();
-    size_t    lstr = 0;
+    t_md5_ctx ctx = init_md5_ctx();
 
-    lstr = strlen(str);
-    md5_transform(&ctx, str, lstr);
-    if ((*digest = md5_digest(&ctx)) == NULL) {
-        return (1);
+    md5_transform(&ctx, (const uint8_t *)str, strlen(str));
+    md5_finalize(&ctx);
+    if (md5_digest(&ctx, digest, ldigest) == -1) {
+        return (-1);
     }
-    *ldigest = sizeof(ctx.state);
     return (0);
 }
 
 int
 md5_fd(int fd, void **digest, size_t *ldigest) {
-    t_md5_ctx ctx = init_md5_ctx();
+    t_md5_ctx ctx                       = init_md5_ctx();
+    ssize_t   ret                       = 0;
+    uint8_t   buff[READ_BUFF_SIZE_BYTE] = {0};
 
-    if ((*digest = md5_digest(&ctx)) == NULL) {
-        return (1);
+    while ((ret = read(fd, buff, sizeof(buff))) > 0) {
+        md5_transform(&ctx, buff, (size_t)ret);
     }
-    *ldigest = sizeof(ctx.state);
+    if (ret == -1) {
+        return (-1);
+    }
+    md5_finalize(&ctx);
+    if (md5_digest(&ctx, digest, ldigest) == -1) {
+        return (-1);
+    }
     return (0);
 }

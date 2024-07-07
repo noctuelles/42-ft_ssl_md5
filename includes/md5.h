@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 15:15:43 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/06 14:40:40 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/07 17:35:34 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,13 +25,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MD5_STATE 4
-#define MD5_BLK_LEN_WORD 16
+#define MD5_STATE (4)
+#define MD5_BUFF_SIZE_BYTE (64)
+#define READ_BUFF_SIZE_BYTE (1 << 10)
 
 typedef struct s_md5_ctx {
-    size_t   mlen;
+    uint64_t mlen;
     size_t   boff;
-    uint32_t buff[MD5_BLK_LEN_WORD];
+    uint8_t  buff[MD5_BUFF_SIZE_BYTE];
     uint32_t state[MD5_STATE];
 } t_md5_ctx;
 
@@ -43,6 +44,9 @@ typedef struct s_md5_ctx {
 // t_md5_ctx init_md5_ctx(void);
 // void      md5_step(t_md5_ctx* md5_ctx);
 // void      md5_transform(t_md5_ctx* md5_ctx, const uint8_t* buff, size_t buff_len);
+
+t_md5_ctx init_md5_ctx(void);
+void      md5_transform(t_md5_ctx *md5_ctx, const uint8_t *buff, size_t blen);
 
 int md5_str(const char *str, void **digest, size_t *ldigest);
 int md5_fd(int fd, void **digest, size_t *ldigest);
