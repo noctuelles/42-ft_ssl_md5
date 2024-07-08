@@ -6,12 +6,27 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/06 14:41:23 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 17:06:02 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FT_SSL_H
 #define FT_SSL_H
+
+/**
+ * @file ft_ssl.h
+ * @note Ressource used :
+ *
+ *      https://en.wikipedia.org/wiki/MD5
+ *      https://www.ietf.org/rfc/rfc1321.txt
+ *      https://en.wikipedia.org/wiki/SHA-2
+ *      https://datatracker.ietf.org/doc/html/rfc6234
+ *
+ *      https://en.wikipedia.org/wiki/Padding_(cryptography)
+ *      https://crypto.stackexchange.com/questions/90336/what-is-the-padding-block-actually-in-merkle-damg%C3%A5rd
+ *      https://en.wikipedia.org/wiki/Merkle%E2%80%93Damg%C3%A5rd_construction,
+ *      especially the "Length padding example".
+ */
 
 #include <stdint.h>
 

@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 13:25:29 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/07 23:40:51 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 16:45:53 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,12 @@
  * @brief Perform a left rotation on a 32-bit value.
  */
 #define L_ROT_32(X, N) (((X) << (N)) | ((X) >> (32 - (N))))
+
+/**
+ * @brief Perform a right rotation on a 32-bit value.
+ */
+#define R_ROT_32(X, N) (((X) >> (N)) | ((X) << (32 - (N))))
+
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #endif
