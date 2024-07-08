@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 18:20:48 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 18:57:42 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,43 +33,28 @@ static const uint32_t g_cube_roots[64] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 };
 
-t_sha256_ctx
-init_sha256_ctx(void) {
-    t_sha256_ctx sha256_ctx = {0};
-
-    sha256_ctx.state[0] = 0x6a09e667;
-    sha256_ctx.state[1] = 0xbb67ae85;
-    sha256_ctx.state[2] = 0x3c6ef372;
-    sha256_ctx.state[3] = 0xa54ff53a;
-    sha256_ctx.state[4] = 0x510e527f;
-    sha256_ctx.state[5] = 0x9b05688c;
-    sha256_ctx.state[6] = 0x1f83d9ab;
-    sha256_ctx.state[7] = 0x5be0cd19;
-
-    return (sha256_ctx);
-}
-
 void
-sha256_step(t_sha256_ctx *ctx) {
-    uint32_t a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0,
+sha256_step(void *ctx) {
+    t_sha256_ctx *sha256_ctx = ctx;
+    uint32_t      a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0,
              h = 0; /* Working variables */
     uint32_t w[64]; /* Message schedule */
 
     /* Prepare message schedule */
-    memcpy(w, ctx->buffer, sizeof(ctx->buffer));
+    memcpy(w, sha256_ctx->buffer, sizeof(sha256_ctx->buffer));
     for (size_t t = 16; t < 64; t++) {
         w[t] = SSIG1(w[t - 2]) + w[t - 7] + SSIG0(w[t - 15]) + w[t - 16];
     }
 
     /* Initialize the working variables */
-    a = ctx->state[0];
-    b = ctx->state[1];
-    c = ctx->state[2];
-    d = ctx->state[3];
-    e = ctx->state[4];
-    f = ctx->state[5];
-    g = ctx->state[6];
-    h = ctx->state[7];
+    a = sha256_ctx->state[0];
+    b = sha256_ctx->state[1];
+    c = sha256_ctx->state[2];
+    d = sha256_ctx->state[3];
+    e = sha256_ctx->state[4];
+    f = sha256_ctx->state[5];
+    g = sha256_ctx->state[6];
+    h = sha256_ctx->state[7];
 
     /* Main hash computation */
     for (size_t t = 0; t < 64; t++) {
@@ -87,12 +72,49 @@ sha256_step(t_sha256_ctx *ctx) {
     }
 
     /* Compute intermediate hash value */
-    ctx->state[0] += a;
-    ctx->state[1] += b;
-    ctx->state[2] += c;
-    ctx->state[3] += d;
-    ctx->state[4] += e;
-    ctx->state[5] += f;
-    ctx->state[6] += g;
-    ctx->state[7] += h;
+    sha256_ctx->state[0] += a;
+    sha256_ctx->state[1] += b;
+    sha256_ctx->state[2] += c;
+    sha256_ctx->state[3] += d;
+    sha256_ctx->state[4] += e;
+    sha256_ctx->state[5] += f;
+    sha256_ctx->state[6] += g;
+    sha256_ctx->state[7] += h;
+}
+
+int
+sha256_init(void *ctx) {
+    t_sha256_ctx *sha256_ctx = ctx;
+
+    sha256_ctx->state[0] = 0x6a09e667;
+    sha256_ctx->state[1] = 0xbb67ae85;
+    sha256_ctx->state[2] = 0x3c6ef372;
+    sha256_ctx->state[3] = 0xa54ff53a;
+    sha256_ctx->state[4] = 0x510e527f;
+    sha256_ctx->state[5] = 0x9b05688c;
+    sha256_ctx->state[6] = 0x1f83d9ab;
+    sha256_ctx->state[7] = 0x5be0cd19;
+
+    return (0);
+}
+
+int
+sha256_update(void *ctx, const uint8_t *buff, size_t bsize) {
+    t_sha256_ctx *sha256_ctx = ctx;
+
+    (void)bsize;
+    (void)sha256_ctx;
+    (void)buff;
+
+    return (0);
+}
+
+int
+sha256_finalize(void *ctx, uint8_t *dgst) {
+    t_sha256_ctx *sha256_ctx = ctx;
+
+    (void)sha256_ctx;
+    (void)dgst;
+
+    return (0);
 }

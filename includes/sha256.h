@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:46 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 18:16:53 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 19:01:57 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,12 @@
 #include <stdint.h>
 
 #include "utils.h"
+
+/**
+ * @brief The SHA-256 digest size in bytes.
+ *
+ */
+#define SHA256_DIGEST_SIZE (32)
 
 typedef struct s_sha256_ctx {
     uint8_t  buffer[64];
@@ -35,5 +41,9 @@ typedef struct s_sha256_ctx {
 #define SSIG1(X) (R_ROT_32(X, 17) ^ R_ROT_32(X, 19) ^ ((X) >> 10))
 #define BSIG0(X) (R_ROT_32(X, 2) ^ R_ROT_32(X, 13) ^ R_ROT_32(X, 22))
 #define BSIG1(X) (R_ROT_32(X, 6) ^ R_ROT_32(X, 11) ^ R_ROT_32(X, 25))
+
+int sha256_init(void *ctx);
+int sha256_update(void *ctx, const uint8_t *buff, size_t bsize);
+int sha256_finalize(void *ctx, uint8_t *dgst);
 
 #endif

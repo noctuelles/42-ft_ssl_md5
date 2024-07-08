@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 17:14:18 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 00:25:10 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 18:40:30 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,39 +70,19 @@ static const uint8_t g_pads[64] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /**
- * @brief Initialize MD5 context.
- *
- * @return t_md5_ctx md5 context.
- */
-t_md5_ctx
-md5_init(void) {
-    t_md5_ctx md5_ctx = {0};
-
-    md5_ctx.state[0] = 0x67452301;
-    md5_ctx.state[1] = 0xEFCDAB89;
-    md5_ctx.state[2] = 0x98BADCFE;
-    md5_ctx.state[3] = 0x10325476;
-
-#ifdef VERBOSE
-    fprintf(stderr, "[MD5] Initialization of the MD5 state.\n");
-#endif
-    return (md5_ctx);
-}
-
-/**
  * @brief Apply the 4 rounds (16 operations per round) on a 512-bit block.
  *
- * @param md5_ctx md5 context.
+ * @param ctx md5 context.
  */
-void
-md5_step(t_md5_ctx *md5_ctx) {
+static void
+md5_step(t_md5_ctx *ctx) {
     uint32_t        a = 0, b = 0, c = 0, d = 0, f = 0, g = 0;
-    const uint32_t *input = (const uint32_t *)md5_ctx->buff;
+    const uint32_t *input = (const uint32_t *)ctx->buff;
 
-    a = md5_ctx->state[0];
-    b = md5_ctx->state[1];
-    c = md5_ctx->state[2];
-    d = md5_ctx->state[3];
+    a = ctx->state[0];
+    b = ctx->state[1];
+    c = ctx->state[2];
+    d = ctx->state[3];
     for (size_t i = 0; i < 64; i++) {
         if (FIRST_ROUND(i)) {
             f = F(b, c, d);
@@ -123,10 +103,29 @@ md5_step(t_md5_ctx *md5_ctx) {
         c = b;
         b += L_ROT_32(f, g_shifts[i]);
     }
-    md5_ctx->state[0] += a;
-    md5_ctx->state[1] += b;
-    md5_ctx->state[2] += c;
-    md5_ctx->state[3] += d;
+    ctx->state[0] += a;
+    ctx->state[1] += b;
+    ctx->state[2] += c;
+    ctx->state[3] += d;
+}
+
+/**
+ * @brief Initialize MD5 context.
+ *
+ * @return t_md5_ctx md5 context.
+ */
+int
+md5_init(void *ctx) {
+    t_md5_ctx *md5_ctx = ctx;
+
+    md5_ctx->state[0] = 0x67452301;
+    md5_ctx->state[1] = 0xEFCDAB89;
+    md5_ctx->state[2] = 0x98BADCFE;
+    md5_ctx->state[3] = 0x10325476;
+#ifdef VERBOSE
+    fprintf(stderr, "[MD5] Initialization of the MD5 state.\n");
+#endif
+    return (0);
 }
 
 /**
@@ -137,8 +136,10 @@ md5_step(t_md5_ctx *md5_ctx) {
  * @param buff Buffer.
  * @param bsize Buffer size.
  */
-void
-md5_transform(t_md5_ctx *md5_ctx, const uint8_t *buff, size_t bsize) {
+int
+md5_update(void *ctx, const uint8_t *buff, size_t bsize) {
+    t_md5_ctx *md5_ctx = ctx;
+
     while (bsize) {
         const size_t buntil_full = MD5_BUFF_SIZE_BYTE - md5_ctx->boff;
         const size_t consumed    = MIN(buntil_full, bsize);
@@ -156,79 +157,32 @@ md5_transform(t_md5_ctx *md5_ctx, const uint8_t *buff, size_t bsize) {
             md5_ctx->boff = 0;
         }
     }
+    return (0);
 }
 
 /**
- * @brief Finalize the MD5 digest by appending padding bits and the message
- * length.
+ * @brief Finalize the MD5 digest.
  *
- * @param md5_ctx
+ * @param ctx md5 context.
+ * @param dgst result-argument, the md5 digest will be stored in the location
+ * pointed by dgst. Note that dgst must be large enough to accomodate the MD5
+ * Digest.
  */
-void
-md5_finalize(t_md5_ctx *md5_ctx) {
+int
+md5_finalize(void *ctx, uint8_t *dgst) {
+    t_md5_ctx     *md5_ctx        = ctx;
     const uint64_t len_before_pad = md5_ctx->mlen * 8;
     const size_t   npad =
         md5_ctx->boff < 56 ? 56 - md5_ctx->boff : 120 - md5_ctx->boff;
 
-    md5_transform(md5_ctx, g_pads, npad);
-    md5_transform(md5_ctx, (const uint8_t *)&len_before_pad,
-                  sizeof(len_before_pad));
+    md5_update(md5_ctx, g_pads, npad);
+    md5_update(md5_ctx, (const uint8_t *)&len_before_pad,
+               sizeof(len_before_pad));
+    memcpy(dgst, md5_ctx->state, sizeof(md5_ctx->state));
 #ifdef VERBOSE
     fprintf(stderr, "[MD5] End of message.\n");
     fprintf(stderr, "[MD5] Padding with one 1 and %lu 0.", (npad - 1) * 8);
     fprintf(stderr, "[MD5] Padding with message size of %lu bits.", org_len);
 #endif
-}
-
-/**
- * @brief
- *
- * @param md5_ctx md5 context.
- * @param digest result-argument, store the memory location of the digest.
- * @param ldigest result-argument, store the size of the digest.
- * @return int 0, or -1 otherwise.
- */
-int
-md5_digest(const t_md5_ctx *md5_ctx, void **digest, size_t *ldigest) {
-    void  *rslt = NULL;
-    size_t size = sizeof(md5_ctx->state);
-
-    if ((rslt = malloc(size)) == NULL) {
-        return (-1);
-    }
-    memcpy(rslt, md5_ctx->state, size);
-    *digest  = rslt;
-    *ldigest = size;
-    return (0);
-}
-
-int
-md5_str(const char *str, void **digest, size_t *ldigest) {
-    t_md5_ctx ctx = md5_init();
-
-    md5_transform(&ctx, (const uint8_t *)str, strlen(str));
-    md5_finalize(&ctx);
-    if (md5_digest(&ctx, digest, ldigest) == -1) {
-        return (-1);
-    }
-    return (0);
-}
-
-int
-md5_fd(int fd, void **digest, size_t *ldigest) {
-    t_md5_ctx ctx                       = md5_init();
-    ssize_t   ret                       = 0;
-    uint8_t   buff[READ_BUFF_SIZE_BYTE] = {0};
-
-    while ((ret = read(fd, buff, sizeof(buff))) > 0) {
-        md5_transform(&ctx, buff, (size_t)ret);
-    }
-    if (ret == -1) {
-        return (-1);
-    }
-    md5_finalize(&ctx);
-    if (md5_digest(&ctx, digest, ldigest) == -1) {
-        return (-1);
-    }
     return (0);
 }

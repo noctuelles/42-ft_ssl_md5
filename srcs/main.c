@@ -6,30 +6,52 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 00:31:50 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 19:05:07 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "ft_ssl.h"
 #include "includes/md5.h"
+#include "includes/sha256.h"
 #include "libft.h"
+#include "wrapper.h"
 
 #define NSIZE(x) (sizeof(x) / sizeof(x[0]))
 
 extern const char *program_invocation_short_name;
 
-static const t_command g_available_cmds[] = {{.name                = "md5",
-                                              .opts_parsing_config = NULL,
-                                              .hash_fd             = md5_fd,
-                                              .hash_str            = md5_str},
-                                             {.name                = "sha256",
-                                              .opts_parsing_config = NULL,
-                                              .hash_fd             = NULL,
-                                              .hash_str            = NULL}};
+static const t_command g_available_cmds[] = {
+    {
+        .name                = "md5",
+        .opts_parsing_config = NULL,
+        .dgst_fnct =
+            {
+                .dgst_init     = md5_init,
+                .dgst_update   = md5_update,
+                .dgst_finalize = md5_finalize,
+            },
+        .dgst_size = MD5_DIGEST_SIZE,
+        .ctx_size  = sizeof(t_md5_ctx),
+    },
+    {
+        .name                = "sha256",
+        .opts_parsing_config = NULL,
+        .dgst_fnct =
+            {
+                .dgst_init     = sha256_init,
+                .dgst_update   = sha256_update,
+                .dgst_finalize = sha256_finalize,
+            },
+        .dgst_size = SHA256_DIGEST_SIZE,
+        .ctx_size  = sizeof(t_sha256_ctx),
+    }};
 
 static int
 print_usage(int ret_code) {
@@ -60,17 +82,42 @@ print_digest(const uint8_t *digest, size_t ldigest) {
 
 static int
 digest_msg(const t_command *cmd) {
-    void  *digest  = NULL;
-    size_t ldigest = 0;
+    uint8_t *dgst = NULL;
+    void    *ctx = ctx = NULL;
+    ssize_t  ret       = -1;
 
-    assert(cmd->hash_fd != NULL && "FD hash not implemented");
-    assert(cmd->hash_str != NULL && "STR hash not implemented");
-
-    cmd->hash_fd(STDIN, &digest, &ldigest);
-
-    print_digest(digest, ldigest);
-
-    return (0);
+    if ((dgst = Malloc(cmd->dgst_size)) == NULL) {
+        goto ret;
+    }
+    if ((ctx = Malloc(cmd->ctx_size)) == NULL) {
+        goto free_dgst;
+    }
+    if (cmd->dgst_fnct.dgst_init(ctx) != 0) {
+        ft_error(0, 0, "failed to initialize %s", cmd->name);
+        goto free_ctx;
+    }
+    /* TODO: arbitrary file descriptor. */
+    while ((ret = Read(STDIN_FILENO, dgst, cmd->dgst_size)) > 0) {
+        if (cmd->dgst_fnct.dgst_update(ctx, dgst, ret) != 0) {
+            ft_error(0, 0, "failed to update %s", cmd->name);
+            goto free_ctx;
+        }
+    }
+    if (ret < 0) {
+        goto free_ctx;
+    }
+    if (cmd->dgst_fnct.dgst_finalize(ctx, dgst) != 0) {
+        ft_error(0, 0, "failed to finalize %s", cmd->name);
+        goto free_ctx;
+    }
+    print_digest(dgst, cmd->dgst_size);
+    ret = 0;
+free_ctx:
+    free(ctx);
+free_dgst:
+    free(dgst);
+ret:
+    return (ret);
 }
 
 int

@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 17:06:02 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 19:01:06 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,14 +32,20 @@
 
 #include "ft_args_parser.h"
 
-typedef int (*t_hash_str_fptr)(const char *, void **, size_t *);
-typedef int (*t_hash_fd_fptr)(int, void **, size_t *);
+typedef struct s_dgst_fnct {
+    int (*dgst_init)(void *); /* */
+    int (*dgst_update)(void *, const uint8_t *, size_t);
+    int (*dgst_finalize)(void *, uint8_t *);
+} t_dgst_fnct;
 
 typedef struct s_command {
-    const char           *name;
-    t_args_parser_config *opts_parsing_config;
-    t_hash_str_fptr       hash_str;
-    t_hash_fd_fptr        hash_fd;
+    const char *name; /* The name of the command */
+    t_args_parser_config
+               *opts_parsing_config; /* The options parsing configuration */
+    void       *ctx;                 /* The context of the digest function */
+    t_dgst_fnct dgst_fnct;           /* The digest function */
+    size_t      dgst_size;           /* The size of the digest in bytes */
+    size_t      ctx_size;            /* The size of the context */
 } t_command;
 
 #endif

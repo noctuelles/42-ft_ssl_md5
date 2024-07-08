@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 15:15:43 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 00:15:14 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 19:01:39 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,7 @@
  * @file md5.h
  * @note Ressource used :
  *
- *      https://en.wikipedia.org/wiki/Padding_(cryptography)
- *      https://en.wikipedia.org/wiki/MD5
- *      https://www.ietf.org/rfc/rfc1321.txt
+
  */
 
 #include <stddef.h>
@@ -30,6 +28,12 @@
 #define MD5_STATE (4)
 #define MD5_BUFF_SIZE_BYTE (64)
 #define READ_BUFF_SIZE_BYTE (1 << 10)
+
+/**
+ * @brief The MD5 digest size in bytes.
+ *
+ */
+#define MD5_DIGEST_SIZE (16)
 
 typedef struct s_md5_ctx {
     uint64_t mlen;                     /* message length*/
@@ -48,7 +52,8 @@ typedef struct s_md5_ctx {
 #define THIRD_ROUND(I) ((I) >= 32 && (I) <= 47)
 #define FOURTH_ROUND(I) ((I) >= 48 && (I) <= 63)
 
-int md5_str(const char *str, void **digest, size_t *ldigest);
-int md5_fd(int fd, void **digest, size_t *ldigest);
+int md5_init(void *ctx);
+int md5_update(void *ctx, const uint8_t *buff, size_t bsize);
+int md5_finalize(void *ctx, uint8_t *dgst);
 
 #endif
