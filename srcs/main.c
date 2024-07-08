@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 00:31:50 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/08 16:12:05 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,19 +17,19 @@
 #include "ft_ssl.h"
 #include "includes/md5.h"
 #include "libft.h"
-
-#define NSIZE(x) (sizeof(x) / sizeof(x[0]))
+#include "opts.h"
 
 extern const char *program_invocation_short_name;
 
-static const t_command g_available_cmds[] = {{.name                = "md5",
-                                              .opts_parsing_config = NULL,
-                                              .hash_fd             = md5_fd,
-                                              .hash_str            = md5_str},
-                                             {.name                = "sha256",
-                                              .opts_parsing_config = NULL,
-                                              .hash_fd             = NULL,
-                                              .hash_str            = NULL}};
+static const t_command g_available_cmds[] = {
+    {.name                = "md5",
+     .opts_parsing_config = &g_md5_opts_config,
+     .hash_fd             = md5_fd,
+     .hash_str            = md5_str},
+    {.name                = "sha256",
+     .opts_parsing_config = NULL,
+     .hash_fd             = NULL,
+     .hash_str            = NULL}};
 
 static int
 print_usage(int ret_code) {
@@ -92,5 +92,7 @@ main(int argc, char **argv) {
         ft_error(0, 0, "'%s': no such command", cmd_str);
         return (1);
     }
+    cmd->opts_parsing_config->argc = argc - 2;
+    cmd->opts_parsing_config->argv = argv + 2;
     return (digest_msg(cmd));
 }

@@ -1,23 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.h                                            :+:      :+:    :+:   */
+/*   opts.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/03 13:25:29 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 16:12:10 by plouvel          ###   ########.fr       */
+/*   Created: 2024/07/08 16:06:29 by plouvel           #+#    #+#             */
+/*   Updated: 2024/07/08 16:07:00 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef OPTS_H
+#define OPTS_H
 
-/**
- * @brief Perform a left rotation on a 32-bit value.
- */
-#define L_ROT_32(X, N) (((X) << (N)) | ((X) >> (32 - (N))))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define NSIZE(x) (sizeof(x) / sizeof(x[0]))
+#include "ft_args_parser.h"
+
+extern t_args_parser_config g_md5_opts_config;
 
 #endif
