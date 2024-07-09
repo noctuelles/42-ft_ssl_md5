@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/07/08 18:57:51 by plouvel          ###   ########.fr        #
+#    Updated: 2024/07/09 11:39:04 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -35,7 +35,8 @@ SRCS=main.c \
 	 wrapper.c \
 	 sha256.c
 
-TESTS=test_md5.c
+TESTS=test_utils.c \
+      test_sha256.c
 
 SRCS_TESTS:=$(addprefix $(TESTS_PATH)/, $(TESTS))
 
