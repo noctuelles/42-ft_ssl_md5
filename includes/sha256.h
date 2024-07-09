@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:46 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 19:01:57 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/09 11:55:59 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,12 @@
  *
  */
 #define SHA256_DIGEST_SIZE (32)
+#define SHA256_BUFF_SIZE_BYTE (64)
 
 typedef struct s_sha256_ctx {
-    uint8_t  buffer[64];
+    size_t   mlen;
+    size_t   boff;
+    uint8_t  buff[64];
     uint32_t state[8];
 } t_sha256_ctx;
 
@@ -39,6 +42,10 @@ typedef struct s_sha256_ctx {
 
 #define SSIG0(X) (R_ROT_32(X, 7) ^ R_ROT_32(X, 18) ^ ((X) >> 3))
 #define SSIG1(X) (R_ROT_32(X, 17) ^ R_ROT_32(X, 19) ^ ((X) >> 10))
+
+#define W(w, T) \
+    ((w)[(T) - 16] + SSIG0((w)[(T) - 15]) + (w)[(T) - 7] + SSIG1((w)[(T) - 2]))
+
 #define BSIG0(X) (R_ROT_32(X, 2) ^ R_ROT_32(X, 13) ^ R_ROT_32(X, 22))
 #define BSIG1(X) (R_ROT_32(X, 6) ^ R_ROT_32(X, 11) ^ R_ROT_32(X, 25))
 

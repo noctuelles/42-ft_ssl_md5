@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 18:57:42 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/09 16:10:41 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,17 +33,31 @@ static const uint32_t g_cube_roots[64] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 };
 
-void
+static const uint8_t g_pads[64] = {
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+static void
 sha256_step(void *ctx) {
-    t_sha256_ctx *sha256_ctx = ctx;
-    uint32_t      a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0,
+    t_sha256_ctx   *sha256_ctx = ctx;
+    const uint32_t *input      = (const uint32_t *)sha256_ctx->buff;
+    uint32_t        a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0,
              h = 0; /* Working variables */
     uint32_t w[64]; /* Message schedule */
 
     /* Prepare message schedule */
-    memcpy(w, sha256_ctx->buffer, sizeof(sha256_ctx->buffer));
+    for (size_t i = 0; i < 12; i++) {
+        w[i] = __builtin_bswap32(input[i]);
+    }
     for (size_t t = 16; t < 64; t++) {
-        w[t] = SSIG1(w[t - 2]) + w[t - 7] + SSIG0(w[t - 15]) + w[t - 16];
+        const uint32_t S0 = SSIG0(w[t - 15]);
+        const uint32_t S1 = SSIG1(w[t - 2]);
+
+        w[t] = w[t - 16] + S0 + w[t - 7] + S1;
     }
 
     /* Initialize the working variables */
@@ -102,19 +116,42 @@ int
 sha256_update(void *ctx, const uint8_t *buff, size_t bsize) {
     t_sha256_ctx *sha256_ctx = ctx;
 
-    (void)bsize;
-    (void)sha256_ctx;
-    (void)buff;
+    while (bsize) {
+        const size_t buntil_full = SHA256_BUFF_SIZE_BYTE - sha256_ctx->boff;
+        const size_t consumed    = MIN(buntil_full, bsize);
 
+        memcpy(&sha256_ctx->buff[sha256_ctx->boff], buff, consumed);
+
+        bsize -= consumed, buff += consumed, sha256_ctx->boff += consumed,
+            sha256_ctx->mlen += consumed;
+
+        if (sha256_ctx->boff == SHA256_BUFF_SIZE_BYTE) {
+#ifdef VERBOSE
+            fputs(stderr, "[MD5] Processing a 512-bit block...");
+#endif
+            sha256_step(sha256_ctx);
+            sha256_ctx->boff = 0;
+        }
+    }
     return (0);
 }
 
 int
 sha256_finalize(void *ctx, uint8_t *dgst) {
-    t_sha256_ctx *sha256_ctx = ctx;
+    t_sha256_ctx  *sha256_ctx     = ctx;
+    const uint64_t len_before_pad = sha256_ctx->mlen * 8;
+    const size_t   npad =
+        sha256_ctx->boff < 56 ? 56 - sha256_ctx->boff : 120 - sha256_ctx->boff;
 
-    (void)sha256_ctx;
-    (void)dgst;
+    sha256_update(sha256_ctx, g_pads, npad);
+    sha256_update(sha256_ctx, (const uint8_t *)&len_before_pad,
+                  sizeof(len_before_pad));
 
+    for (size_t i = 0; i < 8; i++) {
+        dgst[i * 4 + 0] = (sha256_ctx->state[i] >> 24) & 0xFF;
+        dgst[i * 4 + 1] = (sha256_ctx->state[i] >> 16) & 0xFF;
+        dgst[i * 4 + 2] = (sha256_ctx->state[i] >> 8) & 0xFF;
+        dgst[i * 4 + 3] = sha256_ctx->state[i] & 0xFF;
+    }
     return (0);
 }
