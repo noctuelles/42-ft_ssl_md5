@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/07/22 11:22:18 by plouvel          ###   ########.fr        #
+#    Updated: 2024/07/22 12:20:26 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,8 @@ ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 SRCS=main.c \
 	 md5.c \
 	 wrapper.c \
+	 opts/sha256.c \
+	 opts/md5.c \
 	 sha256.c
 
 TESTS=test_utils.c \
@@ -56,7 +58,7 @@ CC=gcc
 LINK=gcc
 DEPENDS=gcc -MM -MG -MF
 
-CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=gnu11
+CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=gnu11 -O3
 
 DEBUG_FLAGS=-g3
 

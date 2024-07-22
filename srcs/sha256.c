@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 11:23:06 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 11:29:38 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,9 +126,6 @@ sha256_update(void *ctx, const uint8_t *buff, size_t bsize) {
             sha256_ctx->mlen += consumed;
 
         if (sha256_ctx->boff == SHA256_BUFF_SIZE_BYTE) {
-#ifdef VERBOSE
-            fputs(stderr, "[MD5] Processing a 512-bit block...");
-#endif
             sha256_step(sha256_ctx);
             sha256_ctx->boff = 0;
         }

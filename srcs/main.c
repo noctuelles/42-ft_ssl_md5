@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/09 17:04:56 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 12:25:50 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 
 #include "ft_ssl.h"
 #include "includes/md5.h"
+#include "includes/opts.h"
 #include "includes/sha256.h"
 #include "libft.h"
 #include "wrapper.h"
@@ -30,7 +31,7 @@ extern const char *program_invocation_short_name;
 static const t_command g_available_cmds[] = {
     {
         .name                = "md5",
-        .opts_parsing_config = NULL,
+        .opts_parsing_config = &g_md5_conf,
         .dgst_fnct =
             {
                 .dgst_init     = md5_init,
@@ -42,7 +43,7 @@ static const t_command g_available_cmds[] = {
     },
     {
         .name                = "sha256",
-        .opts_parsing_config = NULL,
+        .opts_parsing_config = &g_sha256_conf,
         .dgst_fnct =
             {
                 .dgst_init     = sha256_init,
@@ -55,15 +56,10 @@ static const t_command g_available_cmds[] = {
 
 static int
 print_usage(int ret_code) {
-    printf("usage: %s [COMMAND] [COMMAND OPTS] [FILE/STRING] \n\n",
-           program_invocation_short_name);
+    printf("usage: %s [COMMAND]\n", program_invocation_short_name);
     printf("Available commands :\n");
     for (size_t i = 0; i < NSIZE(g_available_cmds); i++) {
-        printf("%s\n", g_available_cmds[i].name);
-        if (g_available_cmds[i].opts_parsing_config == NULL) {
-            continue;
-        }
-        printf("Available options :\n");
+        printf("%s [OPTS] [FILE]\n", g_available_cmds[i].name);
         ft_args_parser_print_docs(g_available_cmds[i].opts_parsing_config);
     }
     return (ret_code);

@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 19:01:06 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 12:04:03 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,10 +42,11 @@ typedef struct s_command {
     const char *name; /* The name of the command */
     t_args_parser_config
                *opts_parsing_config; /* The options parsing configuration */
-    void       *ctx;                 /* The context of the digest function */
-    t_dgst_fnct dgst_fnct;           /* The digest function */
-    size_t      dgst_size;           /* The size of the digest in bytes */
-    size_t      ctx_size;            /* The size of the context */
+    void       *opts_input; /* The input of the options parsing function */
+    void       *ctx;        /* The context of the digest function */
+    t_dgst_fnct dgst_fnct;  /* The digest function */
+    size_t      dgst_size;  /* The size of the digest in bytes */
+    size_t      ctx_size;   /* The size of the context */
 } t_command;
 
 #endif
