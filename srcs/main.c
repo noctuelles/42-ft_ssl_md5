@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 12:25:50 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 13:16:02 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 
 extern const char *program_invocation_short_name;
 
-static const t_command g_available_cmds[] = {
+static t_command g_available_cmds[] = {
     {
         .name                = "md5",
         .opts_parsing_config = &g_md5_conf,
@@ -38,21 +38,21 @@ static const t_command g_available_cmds[] = {
                 .dgst_update   = md5_update,
                 .dgst_finalize = md5_finalize,
             },
-        .dgst_size = MD5_DIGEST_SIZE,
-        .ctx_size  = sizeof(t_md5_ctx),
+        .dgst_size       = MD5_DIGEST_SIZE,
+        .ctx_size        = sizeof(t_md5_ctx),
+        .opts_input_size = sizeof(t_md5_opts),
     },
-    {
-        .name                = "sha256",
-        .opts_parsing_config = &g_sha256_conf,
-        .dgst_fnct =
-            {
-                .dgst_init     = sha256_init,
-                .dgst_update   = sha256_update,
-                .dgst_finalize = sha256_finalize,
-            },
-        .dgst_size = SHA256_DIGEST_SIZE,
-        .ctx_size  = sizeof(t_sha256_ctx),
-    }};
+    {.name                = "sha256",
+     .opts_parsing_config = &g_sha256_conf,
+     .dgst_fnct =
+         {
+             .dgst_init     = sha256_init,
+             .dgst_update   = sha256_update,
+             .dgst_finalize = sha256_finalize,
+         },
+     .dgst_size       = SHA256_DIGEST_SIZE,
+     .ctx_size        = sizeof(t_sha256_ctx),
+     .opts_input_size = sizeof(t_sha256_opts)}};
 
 static int
 print_usage(int ret_code) {
@@ -73,13 +73,19 @@ print_digest(const uint8_t *digest, size_t ldigest) {
         printf("%02x", digest[i]);
         i++;
     }
-    printf("\n");
 }
 
-static int
-digest_msg(const t_command *cmd) {
+/**
+ * @brief Return the digested message of a given cryptographic hash.
+ *
+ * @param fd The file desciptor to get the data from.
+ * @param cmd The command.
+ * @return uint8_t* The digest or NULL if an error happened.
+ */
+static uint8_t *
+digest_msg(int fd, const t_command *cmd) {
     uint8_t *dgst = NULL;
-    uint8_t  buff[512];
+    uint8_t  buff[1024];
     void    *ctx = ctx = NULL;
     ssize_t  ret       = -1;
 
@@ -91,36 +97,71 @@ digest_msg(const t_command *cmd) {
     }
     if (cmd->dgst_fnct.dgst_init(ctx) != 0) {
         ft_error(0, 0, "failed to initialize %s", cmd->name);
-        goto free_ctx;
+        goto free_dgst;
     }
-    /* TODO: arbitrary file descriptor. */
-    while ((ret = Read(STDIN_FILENO, buff, sizeof(buff))) > 0) {
+    while ((ret = Read(fd, buff, sizeof(buff))) > 0) {
         if (cmd->dgst_fnct.dgst_update(ctx, buff, ret) != 0) {
             ft_error(0, 0, "failed to update %s", cmd->name);
-            goto free_ctx;
+            goto free_dgst;
         }
     }
     if (ret < 0) {
-        goto free_ctx;
+        goto free_dgst;
     }
     if (cmd->dgst_fnct.dgst_finalize(ctx, dgst) != 0) {
         ft_error(0, 0, "failed to finalize %s", cmd->name);
-        goto free_ctx;
+        goto free_dgst;
     }
-    print_digest(dgst, cmd->dgst_size);
-    ret = 0;
-free_ctx:
-    free(ctx);
+    goto free_ctx;
 free_dgst:
     free(dgst);
+    dgst = NULL;
+free_ctx:
+    free(ctx);
+    ctx = NULL;
 ret:
-    return (ret);
+    return (dgst);
 }
+
+// static void
+// print_md5(const t_command *cmd, void *opts, const char *source,
+//           uint8_t *digest) {
+//     t_md5_opts *md5_opts = opts;
+
+//     if (!md5_opts->quiet) {
+//         printf("%s (%s) : ", cmd->name, source);
+//     }
+//     print_digest(digest, cmd->dgst_size);
+//     print("\n");
+// }
+
+// static int
+// handle_md5(const t_command *cmd, void *opts) {
+//     t_md5_opts *md5_opts = opts;
+//     const char *filename = NULL;
+//     uint8_t    *dgst     = NULL;
+//     int         fd       = -1;
+
+//     for (t_list *elem = md5_opts->files; elem != NULL; elem = elem->next) {
+//         filename = elem->content;
+
+//         if ((fd = Open(filename, O_RDONLY)) == -1) {
+//             return (-1);
+//         }
+//         if ((dgst = digest_msg(fd, cmd)) == -1) {
+//             return (-1);
+//         }
+//         Close(fd);
+//     }
+
+//     ft_lstclear(&md5_opts->files, NULL);
+// }
 
 int
 main(int argc, char **argv) {
-    const char      *cmd_str = NULL;
-    const t_command *cmd     = NULL;
+    const char *cmd_str  = NULL;
+    t_command  *cmd      = NULL;
+    void       *cmd_opts = NULL;
 
     if (argc < 2) {
         return (print_usage(1));
@@ -136,5 +177,14 @@ main(int argc, char **argv) {
         ft_error(0, 0, "'%s': no such command", cmd_str);
         return (1);
     }
-    return (digest_msg(cmd));
+    if ((cmd_opts = Malloc(cmd->opts_input_size)) == NULL) {
+        return (1);
+    }
+    cmd->opts_parsing_config->argc  = argc - 1;
+    cmd->opts_parsing_config->argv  = argv + 1;
+    cmd->opts_parsing_config->input = cmd_opts;
+    if (ft_args_parser(cmd->opts_parsing_config) == -1) {
+        return (1);
+    }
+    return (digest_msg(STDIN_FILENO, cmd));
 }

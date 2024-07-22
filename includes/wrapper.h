@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 18:52:52 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 18:55:44 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 13:03:26 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,5 +18,7 @@
 
 void*   Malloc(size_t size);
 ssize_t Read(int fd, void* buf, size_t count);
+int     Open(const char* pathname, int flags);
+int     Close(int fd);
 
 #endif

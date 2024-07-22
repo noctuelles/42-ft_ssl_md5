@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 12:04:03 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 13:08:55 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,21 +32,26 @@
 
 #include "ft_args_parser.h"
 
-typedef struct s_dgst_fnct {
+typedef struct s_command t_command;
+typedef struct s_dgst_fncts {
     int (*dgst_init)(void *); /* */
     int (*dgst_update)(void *, const uint8_t *, size_t);
     int (*dgst_finalize)(void *, uint8_t *);
-} t_dgst_fnct;
+} t_dgst_fncts;
 
-typedef struct s_command {
+typedef int (*t_handle_fn)(const t_command *, void *);
+typedef void (*t_print_fn)(const t_command *, const char *, uint8_t *);
+
+struct s_command {
     const char *name; /* The name of the command */
     t_args_parser_config
-               *opts_parsing_config; /* The options parsing configuration */
-    void       *opts_input; /* The input of the options parsing function */
-    void       *ctx;        /* The context of the digest function */
-    t_dgst_fnct dgst_fnct;  /* The digest function */
-    size_t      dgst_size;  /* The size of the digest in bytes */
-    size_t      ctx_size;   /* The size of the context */
-} t_command;
+                *opts_parsing_config; /* The options parsing configuration */
+    size_t       opts_input_size;     /* The size of the latter */
+    size_t       ctx_size;            /* The size of the latter */
+    size_t       dgst_size;           /* The size of the digest in bytes */
+    t_dgst_fncts dgst_fnct;           /* The digest function */
+    t_handle_fn  handle_fn;
+    t_print_fn   print_fn;
+};
 
 #endif

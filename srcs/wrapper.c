@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 18:52:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 18:58:15 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 13:03:17 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,4 +42,13 @@ Open(const char *pathname, int flags) {
         ft_error(0, errno, "open");
     }
     return fd;
+}
+
+int
+Close(int fd) {
+    int ret = close(fd);
+    if (ret == -1) {
+        ft_error(0, errno, "close");
+    }
+    return ret;
 }
