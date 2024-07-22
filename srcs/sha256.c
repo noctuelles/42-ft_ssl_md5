@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/09 16:10:41 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 11:23:06 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ sha256_step(void *ctx) {
     uint32_t w[64]; /* Message schedule */
 
     /* Prepare message schedule */
-    for (size_t i = 0; i < 12; i++) {
+    for (size_t i = 0; i < 16; i++) {
         w[i] = __builtin_bswap32(input[i]);
     }
     for (size_t t = 16; t < 64; t++) {
@@ -139,14 +139,13 @@ sha256_update(void *ctx, const uint8_t *buff, size_t bsize) {
 int
 sha256_finalize(void *ctx, uint8_t *dgst) {
     t_sha256_ctx  *sha256_ctx     = ctx;
-    const uint64_t len_before_pad = sha256_ctx->mlen * 8;
+    const uint64_t len_before_pad = __builtin_bswap64(sha256_ctx->mlen * 8);
     const size_t   npad =
         sha256_ctx->boff < 56 ? 56 - sha256_ctx->boff : 120 - sha256_ctx->boff;
 
     sha256_update(sha256_ctx, g_pads, npad);
     sha256_update(sha256_ctx, (const uint8_t *)&len_before_pad,
                   sizeof(len_before_pad));
-
     for (size_t i = 0; i < 8; i++) {
         dgst[i * 4 + 0] = (sha256_ctx->state[i] >> 24) & 0xFF;
         dgst[i * 4 + 1] = (sha256_ctx->state[i] >> 16) & 0xFF;

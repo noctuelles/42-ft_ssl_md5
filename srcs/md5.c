@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 17:14:18 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 18:40:30 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/09 17:22:33 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,8 +76,8 @@ static const uint8_t g_pads[64] = {
  */
 static void
 md5_step(t_md5_ctx *ctx) {
-    uint32_t        a = 0, b = 0, c = 0, d = 0, f = 0, g = 0;
-    const uint32_t *input = (const uint32_t *)ctx->buff;
+    register uint32_t a = 0, b = 0, c = 0, d = 0, f = 0, g = 0;
+    const uint32_t   *input = (const uint32_t *)ctx->buff;
 
     a = ctx->state[0];
     b = ctx->state[1];

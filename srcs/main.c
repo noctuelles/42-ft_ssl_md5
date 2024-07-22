@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/08 19:05:07 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/09 17:04:56 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ print_digest(const uint8_t *digest, size_t ldigest) {
 static int
 digest_msg(const t_command *cmd) {
     uint8_t *dgst = NULL;
+    uint8_t  buff[512];
     void    *ctx = ctx = NULL;
     ssize_t  ret       = -1;
 
@@ -97,8 +98,8 @@ digest_msg(const t_command *cmd) {
         goto free_ctx;
     }
     /* TODO: arbitrary file descriptor. */
-    while ((ret = Read(STDIN_FILENO, dgst, cmd->dgst_size)) > 0) {
-        if (cmd->dgst_fnct.dgst_update(ctx, dgst, ret) != 0) {
+    while ((ret = Read(STDIN_FILENO, buff, sizeof(buff))) > 0) {
+        if (cmd->dgst_fnct.dgst_update(ctx, buff, ret) != 0) {
             ft_error(0, 0, "failed to update %s", cmd->name);
             goto free_ctx;
         }
