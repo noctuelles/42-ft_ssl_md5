@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 13:08:55 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/22 16:27:56 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,10 +33,14 @@
 #include "ft_args_parser.h"
 
 typedef struct s_command t_command;
+
+typedef int (*t_dgst_init_fn)(void *);
+typedef int (*t_dgst_update_fn)(void *, const uint8_t *, size_t);
+typedef int (*t_dgst_finalize_fn)(void *, uint8_t *);
 typedef struct s_dgst_fncts {
-    int (*dgst_init)(void *); /* */
-    int (*dgst_update)(void *, const uint8_t *, size_t);
-    int (*dgst_finalize)(void *, uint8_t *);
+    t_dgst_init_fn     dgst_init;
+    t_dgst_update_fn   dgst_update;
+    t_dgst_finalize_fn dgst_finalize;
 } t_dgst_fncts;
 
 typedef int (*t_handle_fn)(const t_command *, void *);

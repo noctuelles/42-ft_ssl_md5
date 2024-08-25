@@ -6,12 +6,13 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 13:16:02 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/08/25 21:15:59 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <assert.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,19 +76,65 @@ print_digest(const uint8_t *digest, size_t ldigest) {
     }
 }
 
+union u_input {
+    int         fd;
+    const char *str;
+};
+
+typedef const uint8_t (*t_proc_input_fn)(union u_input, size_t *, bool *);
+
 /**
- * @brief Return the digested message of a given cryptographic hash.
+ * @brief Process the input from a file descriptor.
+ */
+const uint8_t *
+proc_input_fd(union u_input input, size_t *nbytes_read, bool *fail) {
+    static uint8_t buffer[1 << 10] = {0};
+    ssize_t        ret             = 0;
+
+    *fail = false;
+    ret   = Read(input.fd, buffer, sizeof(buffer));
+    if (ret < 0) {
+        *nbytes_read = 0;
+        *fail        = true;
+    } else {
+        *nbytes_read = (size_t)ret;
+    }
+    return (buffer);
+}
+
+/**
+ * @brief Process the input from a string.
+ */
+const uint8_t *
+proc_input_str(union u_input input, size_t *nbytes_read, bool *fail) {
+    static bool already_proc = false;
+
+    *fail = false;
+    if (!already_proc) {
+        *nbytes_read = strlen(input.str);
+        already_proc = true;
+    } else {
+        *nbytes_read = 0;
+    }
+    return ((const uint8_t *)input.str);
+}
+
+/**
+ * @brief Return the digest of an input by the cryptographic hash function cmd.
  *
- * @param fd The file desciptor to get the data from.
- * @param cmd The command.
- * @return uint8_t* The digest or NULL if an error happened.
+ * @param input The input to hash.
+ * @param proc_input_fn The function to process the input.
+ * @param cmd The command to use.
+ * @return uint8_t* The digest of the input.
  */
 static uint8_t *
-digest_msg(int fd, const t_command *cmd) {
-    uint8_t *dgst = NULL;
-    uint8_t  buff[1024];
-    void    *ctx = ctx = NULL;
-    ssize_t  ret       = -1;
+digest_msg(union u_input input, t_proc_input_fn proc_input_fn,
+           const t_command *cmd) {
+    uint8_t       *dgst = NULL;
+    void          *ctx = ctx   = NULL;
+    const uint8_t *buffer      = NULL;
+    size_t         nbytes_read = 0;
+    bool           fail        = false;
 
     if ((dgst = Malloc(cmd->dgst_size)) == NULL) {
         goto ret;
@@ -99,13 +146,14 @@ digest_msg(int fd, const t_command *cmd) {
         ft_error(0, 0, "failed to initialize %s", cmd->name);
         goto free_dgst;
     }
-    while ((ret = Read(fd, buff, sizeof(buff))) > 0) {
-        if (cmd->dgst_fnct.dgst_update(ctx, buff, ret) != 0) {
+    while ((buffer = proc_input_fn(input, &nbytes_read, &fail)) &&
+           nbytes_read > 0) {
+        if (cmd->dgst_fnct.dgst_update(ctx, buffer, nbytes_read) != 0) {
             ft_error(0, 0, "failed to update %s", cmd->name);
             goto free_dgst;
         }
     }
-    if (ret < 0) {
+    if (fail) {
         goto free_dgst;
     }
     if (cmd->dgst_fnct.dgst_finalize(ctx, dgst) != 0) {
@@ -123,39 +171,27 @@ ret:
     return (dgst);
 }
 
-// static void
-// print_md5(const t_command *cmd, void *opts, const char *source,
-//           uint8_t *digest) {
-//     t_md5_opts *md5_opts = opts;
+static int
+handle_md5(const t_command *cmd, void *opts) {
+    t_md5_opts *md5_opts = opts;
+    const char *filename = NULL;
+    uint8_t    *dgst     = NULL;
+    int         fd       = -1;
 
-//     if (!md5_opts->quiet) {
-//         printf("%s (%s) : ", cmd->name, source);
-//     }
-//     print_digest(digest, cmd->dgst_size);
-//     print("\n");
-// }
+    for (t_list *elem = md5_opts->files; elem != NULL; elem = elem->next) {
+        filename = elem->content;
 
-// static int
-// handle_md5(const t_command *cmd, void *opts) {
-//     t_md5_opts *md5_opts = opts;
-//     const char *filename = NULL;
-//     uint8_t    *dgst     = NULL;
-//     int         fd       = -1;
+        if ((fd = Open(filename, O_RDONLY)) == -1) {
+            return (-1);
+        }
+        if ((dgst = digest_msg_fd(fd, cmd)) == -1) {
+            return (-1);
+        }
+        Close(fd);
+    }
 
-//     for (t_list *elem = md5_opts->files; elem != NULL; elem = elem->next) {
-//         filename = elem->content;
-
-//         if ((fd = Open(filename, O_RDONLY)) == -1) {
-//             return (-1);
-//         }
-//         if ((dgst = digest_msg(fd, cmd)) == -1) {
-//             return (-1);
-//         }
-//         Close(fd);
-//     }
-
-//     ft_lstclear(&md5_opts->files, NULL);
-// }
+    ft_lstclear(&md5_opts->files, NULL);
+}
 
 int
 main(int argc, char **argv) {
