@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 18:52:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 13:03:17 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/08/31 18:38:49 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ int
 Open(const char *pathname, int flags) {
     int fd = open(pathname, flags);
     if (fd == -1) {
-        ft_error(0, errno, "open");
+        ft_error(0, errno, "open(\"%s\")", pathname);
     }
     return fd;
 }

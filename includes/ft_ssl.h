@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 16:27:56 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/08/31 18:07:35 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,12 @@ typedef struct s_dgst_fncts {
 
 typedef int (*t_handle_fn)(const t_command *, void *);
 typedef void (*t_print_fn)(const t_command *, const char *, uint8_t *);
+union u_input {
+    int         fd;
+    const char *str;
+};
+
+typedef const uint8_t *(*t_proc_input_fn)(union u_input, size_t *, bool *);
 
 struct s_command {
     const char *name; /* The name of the command */

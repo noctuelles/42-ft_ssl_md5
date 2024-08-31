@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/08/25 21:15:59 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/08/31 18:30:43 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,13 +76,6 @@ print_digest(const uint8_t *digest, size_t ldigest) {
     }
 }
 
-union u_input {
-    int         fd;
-    const char *str;
-};
-
-typedef const uint8_t (*t_proc_input_fn)(union u_input, size_t *, bool *);
-
 /**
  * @brief Process the input from a file descriptor.
  */
@@ -129,7 +122,7 @@ proc_input_str(union u_input input, size_t *nbytes_read, bool *fail) {
  */
 static uint8_t *
 digest_msg(union u_input input, t_proc_input_fn proc_input_fn,
-           const t_command *cmd) {
+           const t_command *cmd, bool echo_input) {
     uint8_t       *dgst = NULL;
     void          *ctx = ctx   = NULL;
     const uint8_t *buffer      = NULL;
@@ -148,6 +141,9 @@ digest_msg(union u_input input, t_proc_input_fn proc_input_fn,
     }
     while ((buffer = proc_input_fn(input, &nbytes_read, &fail)) &&
            nbytes_read > 0) {
+        if (echo_input == true) {
+            (void)write(STDOUT_FILENO, buffer, nbytes_read);
+        }
         if (cmd->dgst_fnct.dgst_update(ctx, buffer, nbytes_read) != 0) {
             ft_error(0, 0, "failed to update %s", cmd->name);
             goto free_dgst;
@@ -173,24 +169,74 @@ ret:
 
 static int
 handle_md5(const t_command *cmd, void *opts) {
-    t_md5_opts *md5_opts = opts;
-    const char *filename = NULL;
-    uint8_t    *dgst     = NULL;
-    int         fd       = -1;
+    t_md5_opts   *md5_opts = opts;
+    const char   *filename = NULL;
+    uint8_t      *dgst     = NULL;
+    union u_input input;
+    int           fd = -1;
 
+    if (isatty(STDIN_FILENO) == 0 || (!md5_opts->files && !md5_opts->str)) {
+        bool echo = false;
+
+        input.fd = STDIN_FILENO;
+        if (!md5_opts->quiet) {
+            printf("MD5(");
+            if (md5_opts->echo_stdin_to_stdout) {
+                echo = true;
+                printf("\"");
+            } else {
+                printf("stdin");
+            }
+        }
+        if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
+            return (1);
+        }
+        if (!md5_opts->quiet && md5_opts->echo_stdin_to_stdout) {
+            printf("\"");
+        }
+        printf(")= ");
+        print_digest(dgst, cmd->dgst_size);
+        printf("\n");
+    }
+    if (md5_opts->str) {
+        input.str = md5_opts->str;
+        if (!md5_opts->quiet && !md5_opts->reverse) {
+            printf("MD5(\"%s\")= ", md5_opts->str);
+        }
+        if ((dgst = digest_msg(input, proc_input_str, cmd, false)) == NULL) {
+            return (1);
+        }
+        print_digest(dgst, cmd->dgst_size);
+        if (!md5_opts->quiet) {
+            if (md5_opts->reverse) {
+                printf(" \"%s\"", md5_opts->str);
+            }
+        }
+        printf("\n");
+    }
     for (t_list *elem = md5_opts->files; elem != NULL; elem = elem->next) {
         filename = elem->content;
 
         if ((fd = Open(filename, O_RDONLY)) == -1) {
             return (-1);
         }
-        if ((dgst = digest_msg_fd(fd, cmd)) == -1) {
+        if (!md5_opts->quiet && !md5_opts->reverse) {
+            printf("MD5(%s)= ", filename);
+        }
+        input.fd = fd;
+        if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
             return (-1);
         }
+        print_digest(dgst, cmd->dgst_size);
+        if (!md5_opts->quiet) {
+            if (md5_opts->reverse) {
+                printf(" %s", filename);
+            }
+        }
+        printf("\n");
         Close(fd);
     }
-
-    ft_lstclear(&md5_opts->files, NULL);
+    return (0);
 }
 
 int
@@ -222,5 +268,5 @@ main(int argc, char **argv) {
     if (ft_args_parser(cmd->opts_parsing_config) == -1) {
         return (1);
     }
-    return (digest_msg(STDIN_FILENO, cmd));
+    return (handle_md5(cmd, cmd_opts));
 }

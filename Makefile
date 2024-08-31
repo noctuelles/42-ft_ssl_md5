@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/07/22 12:20:26 by plouvel          ###   ########.fr        #
+#    Updated: 2024/08/31 18:08:57 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -58,7 +58,7 @@ CC=gcc
 LINK=gcc
 DEPENDS=gcc -MM -MG -MF
 
-CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=gnu11 -O3
+CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=gnu11
 
 DEBUG_FLAGS=-g3
 
