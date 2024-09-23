@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:53 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 15:20:59 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/23 19:34:35 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,10 @@
 
 #include "ft_args_parser.h"
 
+#ifndef __BYTE_ORDER__
+#error "Byte order not defined. Please use GCC at a recent version or define __BYTE_ORDER__ manually."
+#endif
+
 #define BUFFER_SIZE 1 << 10
 
 typedef struct s_command t_command;
@@ -54,14 +58,13 @@ typedef struct s_dgst_fncts {
 } t_dgst_fncts;
 
 struct s_command {
-    const char *name; /* The name of the command */
-    t_args_parser_config
-                *opts_parsing_config; /* The options parsing configuration */
-    size_t       opts_input_size;     /* The size of the latter */
-    size_t       ctx_size;            /* The size of the latter */
-    size_t       dgst_size;           /* The size of the digest in bytes */
-    t_dgst_fncts dgst_fnct;           /* The digest function */
-    t_handle_fn  handle_fn;
+    const char           *name;                /* The name of the command */
+    t_args_parser_config *opts_parsing_config; /* The options parsing configuration */
+    size_t                opts_input_size;     /* The size of the latter */
+    size_t                ctx_size;            /* The size of the latter */
+    size_t                dgst_size;           /* The size of the digest in bytes */
+    t_dgst_fncts          dgst_fnct;           /* The digest function */
+    t_handle_fn           handle_fn;
 };
 
 #endif

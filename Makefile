@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/09/23 15:39:08 by plouvel          ###   ########.fr        #
+#    Updated: 2024/09/23 19:12:10 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,10 +33,11 @@ ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 SRCS=main.c \
 	 command.c \
 	 md5.c \
+	 sha256.c \
+	 whirlpool.c \
 	 wrapper.c \
 	 opts/sha256.c \
-	 opts/md5.c \
-	 sha256.c
+	 opts/md5.c
 
 TESTS=test_utils.c \
       test_sha256.c

@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/23 15:25:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 15:39:35 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/23 19:39:24 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,8 +110,7 @@ proc_input_str(union u_input input, size_t *nbytes_read, bool *fail) {
  * @return uint8_t* The digest of the input.
  */
 static uint8_t *
-digest_msg(union u_input input, t_proc_input_fn proc_input_fn,
-           const t_command *cmd, bool echo_input) {
+digest_msg(union u_input input, t_proc_input_fn proc_input_fn, const t_command *cmd, bool echo_input) {
     uint8_t       *dgst = NULL;
     void          *ctx = ctx   = NULL;
     const uint8_t *buffer      = NULL;
@@ -128,8 +127,7 @@ digest_msg(union u_input input, t_proc_input_fn proc_input_fn,
         ft_error(0, 0, "failed to initialize %s", cmd->name);
         goto free_dgst;
     }
-    while ((buffer = proc_input_fn(input, &nbytes_read, &fail)) &&
-           nbytes_read > 0) {
+    while ((buffer = proc_input_fn(input, &nbytes_read, &fail)) && nbytes_read > 0) {
         if (echo_input == true) {
             print_stdin_stdout_echo(buffer, nbytes_read);
         }
@@ -264,8 +262,7 @@ handle_sha256(const t_command *cmd, void *opts) {
     int            fd          = -1;
     union u_input  input;
 
-    if (isatty(STDIN_FILENO) == 0 ||
-        (!sha256_opts->files && !sha256_opts->str)) {
+    if (isatty(STDIN_FILENO) == 0 || (!sha256_opts->files && !sha256_opts->str)) {
         bool echo = false;
 
         input.fd = STDIN_FILENO;
@@ -332,6 +329,26 @@ handle_sha256(const t_command *cmd, void *opts) {
         }
         printf("\n");
     }
+
+    return (0);
+}
+
+int
+handle_whirlpool(const t_command *cmd, void *opts) {
+    (void)opts;
+
+    uint8_t      *dgst = NULL;
+    union u_input input;
+    bool          echo = false;
+
+    input.fd = STDIN_FILENO;
+
+    if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
+        return (1);
+    }
+
+    print_digest(dgst, cmd->dgst_size);
+    printf("\n");
 
     return (0);
 }
