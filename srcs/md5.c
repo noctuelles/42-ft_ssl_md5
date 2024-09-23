@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 17:14:18 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/09 17:22:33 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/23 15:06:34 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,8 @@ md5_step(t_md5_ctx *ctx) {
 int
 md5_init(void *ctx) {
     t_md5_ctx *md5_ctx = ctx;
+
+    memset(md5_ctx, 0, sizeof(t_md5_ctx));
 
     md5_ctx->state[0] = 0x67452301;
     md5_ctx->state[1] = 0xEFCDAB89;

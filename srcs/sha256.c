@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/22 11:29:38 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/23 15:06:48 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,13 @@ sha256_step(void *ctx) {
 
     /* Prepare message schedule */
     for (size_t i = 0; i < 16; i++) {
+#if BYTE_ORDER == LITTLE_ENDIAN
         w[i] = __builtin_bswap32(input[i]);
+#elif BYTE_ORDER == BIG_ENDIAN
+        w[i] = input[i];
+#else
+#error "What kind of system are you using ?"
+#endif
     }
     for (size_t t = 16; t < 64; t++) {
         const uint32_t S0 = SSIG0(w[t - 15]);
@@ -99,6 +105,8 @@ sha256_step(void *ctx) {
 int
 sha256_init(void *ctx) {
     t_sha256_ctx *sha256_ctx = ctx;
+
+    memset(sha256_ctx, 0, sizeof(t_sha256_ctx));
 
     sha256_ctx->state[0] = 0x6a09e667;
     sha256_ctx->state[1] = 0xbb67ae85;

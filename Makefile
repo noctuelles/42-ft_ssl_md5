@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/08/31 18:08:57 by plouvel          ###   ########.fr        #
+#    Updated: 2024/09/23 15:39:08 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,7 @@ ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 # Sources
 
 SRCS=main.c \
+	 command.c \
 	 md5.c \
 	 wrapper.c \
 	 opts/sha256.c \
