@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 17:18:33 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/23 19:54:35 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,10 +142,7 @@ sha256_finalize(void *ctx, uint8_t *dgst) {
     sha256_update(sha256_ctx, g_pads, npad);
     sha256_update(sha256_ctx, (const uint8_t *)&len_before_pad, sizeof(len_before_pad));
     for (size_t i = 0; i < 8; i++) {
-        dgst[i * 4 + 0] = (sha256_ctx->state[i] >> 24) & 0xFF;
-        dgst[i * 4 + 1] = (sha256_ctx->state[i] >> 16) & 0xFF;
-        dgst[i * 4 + 2] = (sha256_ctx->state[i] >> 8) & 0xFF;
-        dgst[i * 4 + 3] = sha256_ctx->state[i] & 0xFF;
+        ((uint32_t *)dgst)[i] = BSWAP32(sha256_ctx->state[i]);
     }
     return (0);
 }

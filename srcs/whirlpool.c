@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/23 16:08:22 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 19:39:04 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/23 19:54:01 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -592,7 +592,6 @@ whirlpool_step(t_whirlpool_ctx *whirlpool_ctx) {
     for (size_t i = 0; i < 8; i++) {
         K[0][i]                = whirlpool_ctx->hash[i];
         state[0][i]            = BSWAP64(block[i]) ^ whirlpool_ctx->hash[i];
-        state[0][i]            = block[i] ^ whirlpool_ctx->hash[0];
         whirlpool_ctx->hash[i] = state[0][i];
     }
 
@@ -656,14 +655,12 @@ whirlpool_finalize(void *ctx, uint8_t *dgst) {
     const size_t     npad           = whirlpool_ctx->boff < 56
                                           ? 56 - whirlpool_ctx->boff
                                           : 120 - whirlpool_ctx->boff; /* As an optimiztion, we only happend at 64 bits length. */
-    uint64_t         tmp            = 0;
 
     whirlpool_update(whirlpool_ctx, g_pads, npad);
     whirlpool_update(whirlpool_ctx, (const uint8_t *)&len_before_pad, sizeof(len_before_pad));
 
     for (size_t i = 0; i < 8; i++) {
-        tmp = BSWAP64(whirlpool_ctx->hash[i]);
-        memcpy(&dgst[i * 8], &tmp, 8);
+        ((uint64_t *)dgst)[i] = BSWAP64(whirlpool_ctx->hash[i]);
     }
 
     return (0);
