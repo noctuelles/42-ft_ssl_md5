@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/09/24 09:55:26 by plouvel          ###   ########.fr        #
+#    Updated: 2024/09/24 16:07:21 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ SRCS=main.c \
 	 sha256.c \
 	 whirlpool.c \
 	 wrapper.c \
+	 utils.c \
 	 opts/sha256.c \
 	 opts/md5.c \
 	 opts/whirlpool.c \

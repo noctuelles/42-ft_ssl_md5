@@ -6,12 +6,14 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 13:25:29 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 19:36:50 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 16:06:05 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef UTILS_H
 #define UTILS_H
+
+#include <stdbool.h>
 
 /**
  * @brief Perform a left rotation on a 32-bit value.
@@ -25,8 +27,6 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define LE_TO_BE(X) (((X) << 24) | (((X) & 0xff00) << 8) | (((X) >> 8) & 0xff00) | ((X) >> 24))
-
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define BSWAP64(X) __builtin_bswap64(X)
 #define BSWAP32(X) __builtin_bswap32(X)
@@ -38,5 +38,7 @@
 #else
 #error "Huh?"
 #endif
+
+bool stdin_has_data(void);
 
 #endif

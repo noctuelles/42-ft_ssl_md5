@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/23 16:08:22 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 19:54:01 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 15:42:40 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -650,15 +650,25 @@ whirlpool_update(void *ctx, const uint8_t *buff, size_t bsize) {
 
 int
 whirlpool_finalize(void *ctx, uint8_t *dgst) {
-    t_whirlpool_ctx *whirlpool_ctx  = ctx;
-    uint64_t         len_before_pad = BSWAP64(whirlpool_ctx->mlen * 8); /* Message length in bits */
-    const size_t     npad           = whirlpool_ctx->boff < 56
-                                          ? 56 - whirlpool_ctx->boff
-                                          : 120 - whirlpool_ctx->boff; /* As an optimiztion, we only happend at 64 bits length. */
+    t_whirlpool_ctx *whirlpool_ctx = ctx;
+    /*  A block of 256 bits is appended to the message. This block is treated as an unsigned 256-bit integer (most significant
+     * byte first) and contains the length in bits of the original message (before the padding). Note that we don't use the 256
+     * bits span. */
+    uint64_t message_length[4] = {0};
+    uint64_t total_bits        = BSWAP64(whirlpool_ctx->mlen * 8);
+    size_t   npad              = 0; /* Number of padding bytes to add. */
 
+    /* The message is padded so that its length in bits is an odd multiple of 256 bits (32 bytes). Padding is always added, even
+     * if the message is already of the desired length */
+    if (whirlpool_ctx->boff < 32) {
+        npad = 32 - whirlpool_ctx->boff;
+    } else {
+        npad = 96 - whirlpool_ctx->boff;
+    }
+
+    memcpy(&message_length[3], &total_bits, sizeof(total_bits));
     whirlpool_update(whirlpool_ctx, g_pads, npad);
-    whirlpool_update(whirlpool_ctx, (const uint8_t *)&len_before_pad, sizeof(len_before_pad));
-
+    whirlpool_update(whirlpool_ctx, (uint8_t *)message_length, sizeof(message_length));
     for (size_t i = 0; i < 8; i++) {
         ((uint64_t *)dgst)[i] = BSWAP64(whirlpool_ctx->hash[i]);
     }

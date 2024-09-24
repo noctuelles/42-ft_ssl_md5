@@ -6,11 +6,12 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/23 15:25:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/24 10:00:33 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 16:32:27 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <fcntl.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -173,11 +174,11 @@ handle_md5(const t_command *cmd, void *opts) {
     union u_input input;
     int           fd = -1;
 
-    if (isatty(STDIN_FILENO) == 0 || (!md5_opts->files && !md5_opts->str)) {
+    if (stdin_has_data() || (!md5_opts->files && !md5_opts->str)) {
         bool echo = false;
 
         input.fd = STDIN_FILENO;
-        if (!md5_opts->quiet) {
+        if (!md5_opts->quiet && !md5_opts->reverse) {
             printf("MD5(");
             if (md5_opts->echo_stdin_to_stdout) {
                 echo = true;
@@ -185,19 +186,22 @@ handle_md5(const t_command *cmd, void *opts) {
             } else {
                 printf("stdin");
             }
-        } else if (md5_opts->echo_stdin_to_stdout) {
-            echo = true;
         }
         if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
             return (1);
         }
-        if (!md5_opts->quiet && md5_opts->echo_stdin_to_stdout) {
-            printf("\"");
-        }
-        if (!md5_opts->quiet) {
+        if (!md5_opts->quiet && !md5_opts->reverse) {
+            if (md5_opts->echo_stdin_to_stdout) {
+                printf("\"");
+            }
             printf(")= ");
         }
         print_digest(dgst, cmd->dgst_size);
+        if (!md5_opts->quiet) {
+            if (md5_opts->reverse) {
+                printf("  stdin");
+            }
+        }
         printf("\n");
     }
 
@@ -212,7 +216,7 @@ handle_md5(const t_command *cmd, void *opts) {
         print_digest(dgst, cmd->dgst_size);
         if (!md5_opts->quiet) {
             if (md5_opts->reverse) {
-                printf(" \"%s\"", md5_opts->str);
+                printf("  \"%s\"", md5_opts->str);
             }
         }
         printf("\n");
@@ -235,7 +239,7 @@ handle_md5(const t_command *cmd, void *opts) {
         print_digest(dgst, cmd->dgst_size);
         if (!md5_opts->quiet) {
             if (md5_opts->reverse) {
-                printf(" %s", filename);
+                printf("  %s", filename);
             }
         }
         printf("\n");
@@ -248,25 +252,22 @@ handle_md5(const t_command *cmd, void *opts) {
  *
  * @param cmd The command to handle.
  * @param opts The options associated with the command.
- * @return int
+ * @return int 0 on success, 1 on failure.
  *
- * @note handle_sha256 and handler_md5 are extremely similar. In fact, they
- * clearly violate the DRY principle. But we have to keep them separate even if
- * they have the same options.
  */
 int
 handle_sha256(const t_command *cmd, void *opts) {
     t_sha256_opts *sha256_opts = opts;
     const char    *filename    = NULL;
     uint8_t       *dgst        = NULL;
-    int            fd          = -1;
     union u_input  input;
+    int            fd = -1;
 
-    if (isatty(STDIN_FILENO) == 0 || (!sha256_opts->files && !sha256_opts->str)) {
+    if (stdin_has_data() || (!sha256_opts->files && !sha256_opts->str)) {
         bool echo = false;
 
         input.fd = STDIN_FILENO;
-        if (!sha256_opts->quiet) {
+        if (!sha256_opts->quiet && !sha256_opts->reverse) {
             printf("SHA256(");
             if (sha256_opts->echo_stdin_to_stdout) {
                 echo = true;
@@ -274,19 +275,22 @@ handle_sha256(const t_command *cmd, void *opts) {
             } else {
                 printf("stdin");
             }
-        } else if (sha256_opts->echo_stdin_to_stdout) {
-            echo = true;
         }
         if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
             return (1);
         }
-        if (!sha256_opts->quiet && sha256_opts->echo_stdin_to_stdout) {
-            printf("\"");
-        }
-        if (!sha256_opts->quiet) {
+        if (!sha256_opts->quiet && !sha256_opts->reverse) {
+            if (sha256_opts->echo_stdin_to_stdout) {
+                printf("\"");
+            }
             printf(")= ");
         }
         print_digest(dgst, cmd->dgst_size);
+        if (!sha256_opts->quiet) {
+            if (sha256_opts->reverse) {
+                printf("  stdin");
+            }
+        }
         printf("\n");
     }
 
@@ -301,7 +305,7 @@ handle_sha256(const t_command *cmd, void *opts) {
         print_digest(dgst, cmd->dgst_size);
         if (!sha256_opts->quiet) {
             if (sha256_opts->reverse) {
-                printf(" \"%s\"", sha256_opts->str);
+                printf("  \"%s\"", sha256_opts->str);
             }
         }
         printf("\n");
@@ -324,12 +328,11 @@ handle_sha256(const t_command *cmd, void *opts) {
         print_digest(dgst, cmd->dgst_size);
         if (!sha256_opts->quiet) {
             if (sha256_opts->reverse) {
-                printf(" %s", filename);
+                printf("  %s", filename);
             }
         }
         printf("\n");
     }
-
     return (0);
 }
 
@@ -341,22 +344,27 @@ handle_whirlpool(const t_command *cmd, void *opts) {
     int               fd;
     union u_input     input;
 
-    if (isatty(STDIN_FILENO) == 0 || (!whirlpool_opts->files && !whirlpool_opts->str)) {
+    if (stdin_has_data() || (!whirlpool_opts->files && !whirlpool_opts->str)) {
         input.fd = STDIN_FILENO;
-        if (!whirlpool_opts->quiet) {
+        if (!whirlpool_opts->quiet && !whirlpool_opts->reverse) {
             printf("WHIRLPOOL(stdin)= ");
-            if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
-                return (1);
-            }
-            print_digest(dgst, cmd->dgst_size);
-            printf("\n");
         }
+        if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
+            return (1);
+        }
+        print_digest(dgst, cmd->dgst_size);
+        if (!whirlpool_opts->quiet) {
+            if (whirlpool_opts->reverse) {
+                printf("  stdin");
+            }
+        }
+        printf("\n");
     }
 
     if (whirlpool_opts->str) {
         input.str = whirlpool_opts->str;
         if (!whirlpool_opts->quiet && !whirlpool_opts->reverse) {
-            printf("whirlpool(\"%s\")= ", whirlpool_opts->str);
+            printf("WHIRLPOOL(\"%s\")= ", whirlpool_opts->str);
         }
         if ((dgst = digest_msg(input, proc_input_str, cmd, false)) == NULL) {
             return (1);
@@ -364,7 +372,7 @@ handle_whirlpool(const t_command *cmd, void *opts) {
         print_digest(dgst, cmd->dgst_size);
         if (!whirlpool_opts->quiet) {
             if (whirlpool_opts->reverse) {
-                printf(" \"%s\"", whirlpool_opts->str);
+                printf("  \"%s\"", whirlpool_opts->str);
             }
         }
         printf("\n");
@@ -387,7 +395,7 @@ handle_whirlpool(const t_command *cmd, void *opts) {
         print_digest(dgst, cmd->dgst_size);
         if (!whirlpool_opts->quiet) {
             if (whirlpool_opts->reverse) {
-                printf(" %s", filename);
+                printf("  %s", filename);
             }
         }
         printf("\n");
