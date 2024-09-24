@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/24 09:55:05 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 16:39:55 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,7 @@ main(int argc, char **argv) {
     const char *cmd_str  = NULL;
     t_command  *cmd      = NULL;
     void       *cmd_opts = NULL;
+    int         ret      = 1;
 
     if (argc < 2) {
         return (print_usage(1));
@@ -106,10 +107,11 @@ main(int argc, char **argv) {
         ft_error(0, 0, "'%s': no such command", cmd_str);
         return (1);
     }
-    if ((cmd_opts = Malloc(cmd->opts_input_size)) == NULL) {
-        return (1);
-    }
     if (cmd->opts_parsing_config) {
+        if ((cmd_opts = Malloc(cmd->opts_input_size)) == NULL) {
+            return (1);
+        }
+        bzero(cmd_opts, cmd->opts_input_size);
         cmd->opts_parsing_config->argc  = argc - 1;
         cmd->opts_parsing_config->argv  = argv + 1;
         cmd->opts_parsing_config->input = cmd_opts;
@@ -118,5 +120,9 @@ main(int argc, char **argv) {
             return (1);
         }
     }
-    return (cmd->handle_fn(cmd, cmd_opts));
+    ret = cmd->handle_fn(cmd, cmd_opts);
+    if (cmd_opts) {
+        free(cmd_opts);
+    }
+    return (ret);
 }
