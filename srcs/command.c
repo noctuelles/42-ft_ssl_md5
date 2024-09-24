@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/23 15:25:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/24 16:32:27 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 16:48:35 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,8 +171,9 @@ handle_md5(const t_command *cmd, void *opts) {
     t_md5_opts   *md5_opts = opts;
     const char   *filename = NULL;
     uint8_t      *dgst     = NULL;
+    int           fd       = -1;
+    int           ret      = 1;
     union u_input input;
-    int           fd = -1;
 
     if (stdin_has_data() || (!md5_opts->files && !md5_opts->str)) {
         bool echo = false;
@@ -188,7 +189,7 @@ handle_md5(const t_command *cmd, void *opts) {
             }
         }
         if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
-            return (1);
+            goto clean;
         }
         if (!md5_opts->quiet && !md5_opts->reverse) {
             if (md5_opts->echo_stdin_to_stdout) {
@@ -203,6 +204,7 @@ handle_md5(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
 
     if (md5_opts->str) {
@@ -211,7 +213,7 @@ handle_md5(const t_command *cmd, void *opts) {
             printf("MD5(\"%s\")= ", md5_opts->str);
         }
         if ((dgst = digest_msg(input, proc_input_str, cmd, false)) == NULL) {
-            return (1);
+            goto clean;
         }
         print_digest(dgst, cmd->dgst_size);
         if (!md5_opts->quiet) {
@@ -220,22 +222,24 @@ handle_md5(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
 
     for (t_list *elem = md5_opts->files; elem != NULL; elem = elem->next) {
         filename = elem->content;
 
         if ((fd = Open(filename, O_RDONLY)) == -1) {
-            return (-1);
+            goto clean;
         }
         if (!md5_opts->quiet && !md5_opts->reverse) {
             printf("MD5(%s)= ", filename);
         }
         input.fd = fd;
         if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
-            return (-1);
+            goto clean;
         }
         (void)Close(fd);
+        fd = -1;
         print_digest(dgst, cmd->dgst_size);
         if (!md5_opts->quiet) {
             if (md5_opts->reverse) {
@@ -243,8 +247,17 @@ handle_md5(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
-    return (0);
+    ret = 0;
+clean:
+    if (md5_opts->files) {
+        ft_lstclear(&md5_opts->files, NULL);
+    }
+    if (fd != -1) {
+        (void)Close(fd);
+    }
+    return (ret);
 }
 
 /**
@@ -260,8 +273,9 @@ handle_sha256(const t_command *cmd, void *opts) {
     t_sha256_opts *sha256_opts = opts;
     const char    *filename    = NULL;
     uint8_t       *dgst        = NULL;
+    int            fd          = -1;
+    int            ret         = 1;
     union u_input  input;
-    int            fd = -1;
 
     if (stdin_has_data() || (!sha256_opts->files && !sha256_opts->str)) {
         bool echo = false;
@@ -277,7 +291,7 @@ handle_sha256(const t_command *cmd, void *opts) {
             }
         }
         if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
-            return (1);
+            goto clean;
         }
         if (!sha256_opts->quiet && !sha256_opts->reverse) {
             if (sha256_opts->echo_stdin_to_stdout) {
@@ -292,6 +306,7 @@ handle_sha256(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
 
     if (sha256_opts->str) {
@@ -300,7 +315,7 @@ handle_sha256(const t_command *cmd, void *opts) {
             printf("SHA256(\"%s\")= ", sha256_opts->str);
         }
         if ((dgst = digest_msg(input, proc_input_str, cmd, false)) == NULL) {
-            return (1);
+            goto clean;
         }
         print_digest(dgst, cmd->dgst_size);
         if (!sha256_opts->quiet) {
@@ -309,22 +324,24 @@ handle_sha256(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
 
     for (t_list *elem = sha256_opts->files; elem != NULL; elem = elem->next) {
         filename = elem->content;
 
         if ((fd = Open(filename, O_RDONLY)) == -1) {
-            return (-1);
+            goto clean;
         }
         if (!sha256_opts->quiet && !sha256_opts->reverse) {
             printf("SHA256(%s)= ", filename);
         }
         input.fd = fd;
         if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
-            return (-1);
+            goto clean;
         }
         (void)Close(fd);
+        fd = -1;
         print_digest(dgst, cmd->dgst_size);
         if (!sha256_opts->quiet) {
             if (sha256_opts->reverse) {
@@ -332,16 +349,26 @@ handle_sha256(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
-    return (0);
+    ret = 0;
+clean:
+    if (sha256_opts->files) {
+        ft_lstclear(&sha256_opts->files, NULL);
+    }
+    if (fd != -1) {
+        (void)Close(fd);
+    }
+    return (ret);
 }
 
 int
 handle_whirlpool(const t_command *cmd, void *opts) {
     t_whirlpool_opts *whirlpool_opts = opts;
     uint8_t          *dgst           = NULL;
+    int               fd             = -1;
+    int               ret            = 1;
     const char       *filename;
-    int               fd;
     union u_input     input;
 
     if (stdin_has_data() || (!whirlpool_opts->files && !whirlpool_opts->str)) {
@@ -350,7 +377,7 @@ handle_whirlpool(const t_command *cmd, void *opts) {
             printf("WHIRLPOOL(stdin)= ");
         }
         if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
-            return (1);
+            goto clean;
         }
         print_digest(dgst, cmd->dgst_size);
         if (!whirlpool_opts->quiet) {
@@ -359,6 +386,7 @@ handle_whirlpool(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
 
     if (whirlpool_opts->str) {
@@ -367,7 +395,7 @@ handle_whirlpool(const t_command *cmd, void *opts) {
             printf("WHIRLPOOL(\"%s\")= ", whirlpool_opts->str);
         }
         if ((dgst = digest_msg(input, proc_input_str, cmd, false)) == NULL) {
-            return (1);
+            goto clean;
         }
         print_digest(dgst, cmd->dgst_size);
         if (!whirlpool_opts->quiet) {
@@ -376,22 +404,24 @@ handle_whirlpool(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
 
     for (t_list *elem = whirlpool_opts->files; elem != NULL; elem = elem->next) {
         filename = elem->content;
 
         if ((fd = Open(filename, O_RDONLY)) == -1) {
-            return (-1);
+            goto clean;
         }
         if (!whirlpool_opts->quiet && !whirlpool_opts->reverse) {
             printf("WHIRLPOOL(%s)= ", filename);
         }
         input.fd = fd;
         if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
-            return (-1);
+            goto clean;
         }
         (void)Close(fd);
+        fd = -1;
         print_digest(dgst, cmd->dgst_size);
         if (!whirlpool_opts->quiet) {
             if (whirlpool_opts->reverse) {
@@ -399,7 +429,15 @@ handle_whirlpool(const t_command *cmd, void *opts) {
             }
         }
         printf("\n");
+        free(dgst);
     }
-
-    return (0);
+    ret = 0;
+clean:
+    if (whirlpool_opts->files) {
+        ft_lstclear(&whirlpool_opts->files, NULL);
+    }
+    if (fd != -1) {
+        (void)Close(fd);
+    }
+    return (ret);
 }
