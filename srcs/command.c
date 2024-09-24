@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/23 15:25:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 19:39:24 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 10:00:33 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -335,20 +335,63 @@ handle_sha256(const t_command *cmd, void *opts) {
 
 int
 handle_whirlpool(const t_command *cmd, void *opts) {
-    (void)opts;
+    t_whirlpool_opts *whirlpool_opts = opts;
+    uint8_t          *dgst           = NULL;
+    const char       *filename;
+    int               fd;
+    union u_input     input;
 
-    uint8_t      *dgst = NULL;
-    union u_input input;
-    bool          echo = false;
-
-    input.fd = STDIN_FILENO;
-
-    if ((dgst = digest_msg(input, proc_input_fd, cmd, echo)) == NULL) {
-        return (1);
+    if (isatty(STDIN_FILENO) == 0 || (!whirlpool_opts->files && !whirlpool_opts->str)) {
+        input.fd = STDIN_FILENO;
+        if (!whirlpool_opts->quiet) {
+            printf("WHIRLPOOL(stdin)= ");
+            if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
+                return (1);
+            }
+            print_digest(dgst, cmd->dgst_size);
+            printf("\n");
+        }
     }
 
-    print_digest(dgst, cmd->dgst_size);
-    printf("\n");
+    if (whirlpool_opts->str) {
+        input.str = whirlpool_opts->str;
+        if (!whirlpool_opts->quiet && !whirlpool_opts->reverse) {
+            printf("whirlpool(\"%s\")= ", whirlpool_opts->str);
+        }
+        if ((dgst = digest_msg(input, proc_input_str, cmd, false)) == NULL) {
+            return (1);
+        }
+        print_digest(dgst, cmd->dgst_size);
+        if (!whirlpool_opts->quiet) {
+            if (whirlpool_opts->reverse) {
+                printf(" \"%s\"", whirlpool_opts->str);
+            }
+        }
+        printf("\n");
+    }
+
+    for (t_list *elem = whirlpool_opts->files; elem != NULL; elem = elem->next) {
+        filename = elem->content;
+
+        if ((fd = Open(filename, O_RDONLY)) == -1) {
+            return (-1);
+        }
+        if (!whirlpool_opts->quiet && !whirlpool_opts->reverse) {
+            printf("WHIRLPOOL(%s)= ", filename);
+        }
+        input.fd = fd;
+        if ((dgst = digest_msg(input, proc_input_fd, cmd, false)) == NULL) {
+            return (-1);
+        }
+        (void)Close(fd);
+        print_digest(dgst, cmd->dgst_size);
+        if (!whirlpool_opts->quiet) {
+            if (whirlpool_opts->reverse) {
+                printf(" %s", filename);
+            }
+        }
+        printf("\n");
+    }
 
     return (0);
 }

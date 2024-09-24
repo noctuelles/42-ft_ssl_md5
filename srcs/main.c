@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:52:05 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 17:12:58 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 09:55:05 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ static t_command g_available_cmds[] = {{
                                         .ctx_size        = sizeof(t_sha256_ctx),
                                         .opts_input_size = sizeof(t_sha256_opts)},
                                        {.name                = "whirlpool",
-                                        .opts_parsing_config = NULL,
+                                        .opts_parsing_config = &g_whirlpool_conf,
                                         .dgst_fnct =
                                             {
                                                 .dgst_init     = whirlpool_init,
@@ -68,7 +68,7 @@ static t_command g_available_cmds[] = {{
                                         .dgst_size       = WHIRLPOOL_DIGEST_SIZE * 8,
                                         .handle_fn       = handle_whirlpool,
                                         .ctx_size        = sizeof(t_whirlpool_ctx),
-                                        .opts_input_size = 0}};
+                                        .opts_input_size = sizeof(t_whirlpool_opts)}};
 
 static int
 print_usage(int ret_code) {

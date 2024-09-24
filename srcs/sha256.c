@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 16:23:39 by plouvel           #+#    #+#             */
-/*   Updated: 2024/09/23 19:54:35 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/09/24 09:48:44 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,7 +136,7 @@ sha256_update(void *ctx, const uint8_t *buff, size_t bsize) {
 int
 sha256_finalize(void *ctx, uint8_t *dgst) {
     t_sha256_ctx  *sha256_ctx     = ctx;
-    const uint64_t len_before_pad = __builtin_bswap64(sha256_ctx->mlen * 8);
+    const uint64_t len_before_pad = BSWAP64(sha256_ctx->mlen * 8);
     const size_t   npad           = sha256_ctx->boff < 56 ? 56 - sha256_ctx->boff : 120 - sha256_ctx->boff;
 
     sha256_update(sha256_ctx, g_pads, npad);
