@@ -32,6 +32,13 @@ typedef struct s_sha256_opts {
     t_list     *files;
 } t_sha256_opts;
 
+typedef struct s_base64_opts {
+    bool        decode;
+    bool        encode;
+    const char *input_file;
+    const char *output_file;
+} t_base64_opts;
+
 typedef struct s_whirlpool_opts {
     bool        reverse;
     bool        quiet;
@@ -42,5 +49,6 @@ typedef struct s_whirlpool_opts {
 extern t_args_parser_config g_md5_conf;
 extern t_args_parser_config g_sha256_conf;
 extern t_args_parser_config g_whirlpool_conf;
+extern t_args_parser_config g_base64_conf;
 
 #endif

@@ -31,44 +31,51 @@
 
 extern const char *program_invocation_short_name;
 
-static t_command g_available_cmds[] = {{
-                                           .name                = "md5",
-                                           .opts_parsing_config = &g_md5_conf,
-                                           .dgst_fnct =
-                                               {
-                                                   .dgst_init     = md5_init,
-                                                   .dgst_update   = md5_update,
-                                                   .dgst_finalize = md5_finalize,
-                                               },
-                                           .dgst_size       = MD5_DIGEST_SIZE,
-                                           .handle_fn       = handle_md5,
-                                           .ctx_size        = sizeof(t_md5_ctx),
-                                           .opts_input_size = sizeof(t_md5_opts),
-                                       },
-                                       {.name                = "sha256",
-                                        .opts_parsing_config = &g_sha256_conf,
-                                        .dgst_fnct =
-                                            {
-                                                .dgst_init     = sha256_init,
-                                                .dgst_update   = sha256_update,
-                                                .dgst_finalize = sha256_finalize,
-                                            },
-                                        .dgst_size       = SHA256_DIGEST_SIZE,
-                                        .handle_fn       = handle_sha256,
-                                        .ctx_size        = sizeof(t_sha256_ctx),
-                                        .opts_input_size = sizeof(t_sha256_opts)},
-                                       {.name                = "whirlpool",
-                                        .opts_parsing_config = &g_whirlpool_conf,
-                                        .dgst_fnct =
-                                            {
-                                                .dgst_init     = whirlpool_init,
-                                                .dgst_update   = whirlpool_update,
-                                                .dgst_finalize = whirlpool_finalize,
-                                            },
-                                        .dgst_size       = WHIRLPOOL_DIGEST_SIZE * 8,
-                                        .handle_fn       = handle_whirlpool,
-                                        .ctx_size        = sizeof(t_whirlpool_ctx),
-                                        .opts_input_size = sizeof(t_whirlpool_opts)}};
+static const t_command g_available_cmds[] = {{
+                                                 .name                = "md5",
+                                                 .opts_parsing_config = &g_md5_conf,
+                                                 .type                = COMMAND_DIGEST,
+                                                 .content.digest =
+                                                     {
+                                                         .size     = MD5_DIGEST_SIZE,
+                                                         .ctx_size = sizeof(t_md5_ctx),
+                                                         .init     = md5_init,
+                                                         .update   = md5_update,
+                                                         .finalize = md5_finalize,
+                                                     },
+                                                 .opts_input_size = sizeof(t_md5_opts),
+                                                 .fn              = handle_md5,
+                                             },
+                                             {
+                                                 .name                = "sha256",
+                                                 .opts_parsing_config = &g_sha256_conf,
+                                                 .type                = COMMAND_DIGEST,
+                                                 .opts_input_size     = sizeof(t_sha256_opts),
+                                                 .content.digest =
+                                                     {
+                                                         .size     = SHA256_DIGEST_SIZE,
+                                                         .ctx_size = sizeof(t_sha256_ctx),
+                                                         .init     = sha256_init,
+                                                         .update   = sha256_update,
+                                                         .finalize = sha256_finalize,
+                                                     },
+                                                 .fn = handle_sha256,
+                                             },
+                                             {
+                                                 .name                = "whirlpool",
+                                                 .opts_parsing_config = &g_whirlpool_conf,
+                                                 .type                = COMMAND_DIGEST,
+                                                 .opts_input_size     = sizeof(t_whirlpool_opts),
+                                                 .content.digest =
+                                                     {
+                                                         .size     = WHIRLPOOL_DIGEST_SIZE,
+                                                         .ctx_size = sizeof(t_whirlpool_ctx),
+                                                         .init     = whirlpool_init,
+                                                         .update   = whirlpool_update,
+                                                         .finalize = whirlpool_finalize,
+                                                     },
+                                                 .fn = handle_whirlpool,
+                                             }};
 
 static int
 print_usage(int ret_code) {
@@ -120,7 +127,7 @@ main(int argc, char **argv) {
             return (1);
         }
     }
-    ret = cmd->handle_fn(cmd, cmd_opts);
+    ret = cmd->fn(cmd, cmd_opts);
     if (cmd_opts) {
         free(cmd_opts);
     }

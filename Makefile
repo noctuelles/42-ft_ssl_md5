@@ -37,7 +37,9 @@ SRCS=main.c \
 	 whirlpool.c \
 	 wrapper.c \
 	 utils.c \
+	 base64.c \
 	 opts/sha256.c \
+	 opts/base64.c \
 	 opts/md5.c \
 	 opts/whirlpool.c \
 

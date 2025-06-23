@@ -15,7 +15,7 @@
 
 /**
  * @file ft_ssl.h
- * @note Ressource used :
+ * @note Resource used :
  *
  *      https://en.wikipedia.org/wiki/MD5
  *      https://www.ietf.org/rfc/rfc1321.txt
@@ -45,26 +45,38 @@ union u_input {
     const char *str;
 };
 
+typedef enum e_command_type { COMMAND_DIGEST, COMMAND_ENCODE_DECODE, COMMAND_BLOCK_CIPHER, COMMAND_STREAM_CIPHER } t_command_type;
+
 typedef const uint8_t *(*t_proc_input_fn)(union u_input, size_t *, bool *);
-typedef int (*t_handle_fn)(const t_command *, void *);
+typedef int (*t_command_fn)(const t_command *, void *);
 typedef int (*t_dgst_init_fn)(void *);
 typedef int (*t_dgst_update_fn)(void *, const uint8_t *, size_t);
 typedef int (*t_dgst_finalize_fn)(void *, uint8_t *);
 
-typedef struct s_dgst_fncts {
-    t_dgst_init_fn     dgst_init;
-    t_dgst_update_fn   dgst_update;
-    t_dgst_finalize_fn dgst_finalize;
-} t_dgst_fncts;
+typedef struct e_digest {
+    size_t size; /* The size of the digest in bytes */
+    size_t ctx_size;  /* Size of the context of the digest. */
+
+    t_dgst_init_fn     init;
+    t_dgst_update_fn   update;
+    t_dgst_finalize_fn finalize;
+} t_digest;
+
+typedef struct e_encode_decode {
+} t_encode_decode;
+
+typedef union u_command_content {
+    t_digest        digest;
+    t_encode_decode encode_decode;
+} t_command_content;
 
 struct s_command {
     const char           *name;                /* The name of the command */
     t_args_parser_config *opts_parsing_config; /* The options parsing configuration */
-    size_t                opts_input_size;     /* The size of the latter */
-    size_t                ctx_size;            /* The size of the latter */
-    size_t                dgst_size;           /* The size of the digest in bytes */
-    t_dgst_fncts          dgst_fnct;           /* The digest function */
-    t_handle_fn           handle_fn;
+    size_t                opts_input_size;
+    t_command_type        type;
+    t_command_content     content;
+    t_command_fn          fn;
 };
 
 #endif
